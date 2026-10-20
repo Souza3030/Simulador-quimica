@@ -3,139 +3,254 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#102b2c" />
-    <title>TermoLab — laboratório de termoquímica</title>
+    <meta name="theme-color" content="#172634" />
+    <meta
+      name="description"
+      content="Explore nove experiências de termoquímica. Faça previsões, controle o tempo e compare suas descobertas no TermoLab."
+    />
+    <title>TermoLab — a energia conta uma história</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <header>
-      <a class="brand" href="/"
-        >◈ <span>Termo<span class="accent">Lab</span></span></a
-      ><span class="header-note">CIÊNCIA QUE VOCÊ PODE EXPLORAR</span
-      ><button id="help">? Guia rápido</button>
-    </header>
-    <main>
-      <section class="intro">
-        <div>
-          <span class="eyebrow">LABORATÓRIO VIRTUAL / QUÍMICA</span>
-          <h1>Energia em transformação<span class="accent">.</span></h1>
-          <p>Experimente, observe e descubra a termoquímica.</p>
+    <a class="skip" href="#main">Pular para o experimento</a>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a href="/" class="brand" aria-label="TermoLab início"
+          ><span class="brand-mark">t<span>°</span></span
+          ><span
+            >termo<span class="brand-light">lab</span
+            ><small>UM LABORATÓRIO DE IDEIAS</small></span
+          ></a
+        >
+        <div class="chapter">
+          <span class="eyebrow">TRILHA DE EXPLORAÇÃO</span>
+          <h2>A ciência da energia.</h2>
+          <p>Termoquímica & termodinâmica</p>
         </div>
-        <span class="badge"><i></i> Experimento interativo</span>
-      </section>
-      <nav aria-label="Experimentos">
-        <button class="tab active" data-mode="heat">
-          01 <span>Calor e estados físicos</span></button
-        ><button class="tab" data-mode="reaction">
-          02 <span>Entalpia das reações</span></button
-        ><button class="tab" data-mode="law">
-          03 <span>Primeira lei</span>
+        <nav id="topics" aria-label="Assuntos do capítulo"></nav>
+        <div class="journey">
+          <div>
+            <span>Sua jornada</span><strong id="visited-count">1 / 9</strong>
+          </div>
+          <div class="journey-track"><span id="visited-bar"></span></div>
+          <p>Uma descoberta conecta a próxima.</p>
+        </div>
+        <button class="sidebar-help" id="help"></button>
+      </aside>
+      <div class="main-shell">
+        <header class="topbar">
+          <span class="breadcrumb"
+            >SEU ESPAÇO DE DESCOBERTAS <span>/</span> <b>Laboratório</b></span
+          >
+          <div>
+            <button id="motion" class="quiet" aria-pressed="false">
+              Reduzir movimento</button
+            ><button id="open-notebook" class="notebook-button"></button>
+          </div>
+        </header>
+        <main id="main">
+          <section class="intro">
+            <div>
+              <div class="intro-kicker">
+                <span class="tiny-dot"></span> APRENDER É EXPERIMENTAR
+              </div>
+              <h1>A energia conta uma história<span>.</span></h1>
+              <p>Faça uma pergunta. Mude uma variável. Descubra uma conexão.</p>
+            </div>
+            <div class="chapter-stamp">
+              <span>CAPÍTULO</span><strong>14<span>↗</span></strong
+              ><small>9 perspectivas · infinitas perguntas</small>
+            </div>
+          </section>
+          <div class="experiment-heading">
+            <div>
+              <span class="eyebrow" id="experiment-number"></span>
+              <h2 id="experiment-title"></h2>
+              <p id="experiment-subtitle"></p>
+            </div>
+            <button id="model" class="model-link"></button>
+          </div>
+          <section class="lab-grid" aria-label="Bancada interativa">
+            <div class="bench">
+              <div class="bench-toolbar">
+                <div class="view-switch" role="group" aria-label="Visualização">
+                  <button
+                    id="view-bench"
+                    class="active"
+                    aria-pressed="true"
+                  ></button
+                  ><button id="view-chart" aria-pressed="false"></button>
+                </div>
+                <button id="micro" aria-pressed="true"></button>
+              </div>
+              <div class="stage">
+                <span class="stage-status" id="status"></span
+                ><span class="stage-id">TL / EXPERIMENTAL SERIES</span
+                ><canvas
+                  id="scene"
+                  role="img"
+                  aria-label="Representação visual do experimento"
+                ></canvas>
+                <div id="chart-view" hidden>
+                  <svg
+                    id="chart"
+                    viewBox="0 0 800 380"
+                    role="img"
+                    aria-label="Gráfico quantitativo do experimento"
+                  ></svg>
+                  <p id="chart-caption"></p>
+                </div>
+                <div class="stage-caption" id="stage-caption"></div>
+              </div>
+              <div id="metrics" class="metrics"></div>
+              <div class="timeline" id="timeline">
+                <button id="play" class="play-button"></button
+                ><button
+                  id="reset"
+                  class="reset-button"
+                  aria-label="Reiniciar experimento"
+                ></button>
+                <div class="scrubber">
+                  <div>
+                    <span id="time-label">INÍCIO</span
+                    ><span id="progress-label">0%</span>
+                  </div>
+                  <input
+                    id="progress"
+                    aria-label="Instante do experimento"
+                    type="range"
+                    min="0"
+                    max="1000"
+                    step="1"
+                    value="0"
+                  />
+                </div>
+                <select id="speed" aria-label="Velocidade da reprodução">
+                  <option value="1">1×</option>
+                  <option value="2">2×</option>
+                  <option value=".5">0,5×</option>
+                </select>
+              </div>
+              <div class="static-caption" id="static-caption" hidden>
+                Explore os controles para encontrar a temperatura de inversão.
+              </div>
+            </div>
+            <aside class="controls-card">
+              <div class="section-heading">
+                <span class="eyebrow">O EXPERIMENTO É SEU</span
+                ><span class="control-icon" id="control-icon"></span>
+              </div>
+              <h3>Altere. Observe. Conecte.</h3>
+              <div id="controls"></div>
+              <div class="preset-section">
+                <span>COMECE COM UMA IDEIA</span>
+                <div id="presets"></div>
+              </div>
+              <button id="save-run" class="save-button"></button>
+              <p class="control-note">
+                Guarde dois ensaios e compare no caderno.
+              </p>
+            </aside>
+          </section>
+          <section class="discovery-grid">
+            <article class="insight-card">
+              <div class="insight-header">
+                <span class="small-icon" id="insight-icon"></span
+                ><span class="eyebrow">POR TRÁS DO QUE VOCÊ VÊ</span>
+              </div>
+              <p id="insight"></p>
+              <div id="formula" class="formula"></div>
+            </article>
+            <article class="challenge-card">
+              <div class="challenge-top">
+                <span class="eyebrow">PAUSA PARA UMA HIPÓTESE</span
+                ><span id="challenge-progress"></span>
+              </div>
+              <h3 id="question"></h3>
+              <div id="answers"></div>
+              <p id="feedback" role="status"></p>
+            </article>
+          </section>
+          <section class="notebook-teaser">
+            <span class="teaser-icon" id="teaser-icon"></span>
+            <div>
+              <h3>Uma boa pergunta vale uma nova experiência.</h3>
+              <p>
+                O que você viu? O que isso faz pensar? O que ainda quer
+                descobrir?
+              </p>
+            </div>
+            <button id="write-note">Abrir meu caderno <span>↗</span></button>
+          </section>
+          <footer>
+            <span>Feito para quem pergunta <b>por quê.</b></span
+            ><span>TermoLab · Modelos didáticos · Ensino médio</span>
+          </footer>
+        </main>
+      </div>
+    </div>
+    <dialog id="notebook">
+      <div class="dialog-header">
+        <div>
+          <span class="eyebrow">SEU CADERNO DE CIENTISTA</span>
+          <h2>Pequenas pistas. Grandes conexões.</h2>
+        </div>
+        <button
+          data-close="notebook"
+          aria-label="Fechar caderno"
+          class="icon-button"
+        >
+          ×
         </button>
-      </nav>
-      <section class="lab">
-        <div class="workspace">
-          <div class="panel-title">
-            <div>
-              <span class="eyebrow" id="experiment-number">EXPERIMENTO 01</span>
-              <h2 id="experiment-title">Da água ao vapor</h2>
-            </div>
-            <span class="model-tag">MODELO DIDÁTICO</span>
-          </div>
-          <div class="scene">
-            <canvas
-              id="particles"
-              aria-label="Visualização animada das partículas"
-            ></canvas>
-            <div id="state-label" class="state-label">SÓLIDO</div>
-            <div class="beaker">
-              <div id="liquid"></div>
-              <div class="ticks">— 300<br />— 200<br />— 100</div>
-              <span>H₂O</span>
-            </div>
-            <div id="energy-flow">↑ ENERGIA TÉRMICA</div>
-            <div class="hotplate">
-              <span id="heater-light"></span> TERMO LAB
-            </div>
-            <div class="scene-caption">
-              Representação microscópica ilustrativa · fora de escala
-            </div>
-          </div>
-          <div class="metrics">
-            <div>
-              <span id="metric-a-label">Temperatura</span
-              ><strong id="metric-a">−20 <small>°C</small></strong>
-            </div>
-            <div>
-              <span id="metric-b-label">Energia fornecida</span
-              ><strong id="metric-b">0 <small>kJ</small></strong>
-            </div>
-            <div>
-              <span id="metric-c-label">Estado físico</span
-              ><strong id="metric-c">Sólido</strong>
-            </div>
-          </div>
-          <div class="transport">
-            <button id="play" class="primary">▶ Iniciar</button
-            ><button id="reset">↺ Reiniciar</button
-            ><span id="time">0,0 s simulados</span>
-          </div>
-        </div>
-        <aside>
-          <section class="card">
-            <span class="eyebrow">SUA BANCADA</span>
-            <h2>Controle o experimento</h2>
-            <div id="controls"></div>
-            <p class="hint" id="control-hint"></p>
-          </section>
-          <section class="card chart-card">
-            <div class="chart-heading">
-              <h3 id="chart-title">Curva de aquecimento</h3>
-              <span class="chart-dot">● ao vivo</span>
-            </div>
-            <svg
-              id="chart"
-              viewBox="0 0 400 180"
-              role="img"
-              aria-label="Gráfico do experimento"
-            ></svg>
-            <p id="chart-caption"></p>
-          </section>
-        </aside>
-      </section>
-      <section class="insight">
-        <span class="insight-icon">✦</span>
-        <div>
-          <span class="eyebrow">O QUE ESTÁ ACONTECENDO?</span>
-          <h3 id="insight-title"></h3>
-          <p id="insight-text"></p>
-        </div>
-        <code id="formula"></code>
-      </section>
-      <footer>
-        TermoLab <span>Explore os conceitos. Conecte as ideias.</span
-        ><span>Termoquímica · Ensino médio</span>
-      </footer>
-    </main>
-    <dialog id="guide">
-      <h2>Seu laboratório de termoquímica</h2>
-      <p>
-        <b>Calor e estados:</b> escolha massa e potência, inicie o aquecimento e
-        observe os patamares de fusão e ebulição.
+      </div>
+      <p class="dialog-intro">
+        Anotações e ensaios ficam salvos neste navegador. Exporte uma cópia para
+        levar com você.
       </p>
-      <p>
-        <b>Entalpia:</b> compare reações que liberam e absorvem energia. As
-        temperaturas usam um calorímetro ideal.
-      </p>
-      <p>
-        <b>Primeira lei:</b> altere calor e trabalho e acompanhe ΔU = Q + W. O
-        trabalho é positivo quando realizado sobre o sistema.
-      </p>
-      <p>
-        Modelos simplificados para estudo: pressão de 1 atm, sem perdas de
-        calor. Não são instruções para experiências reais.
-      </p>
-      <button id="close-guide" class="primary">Vamos explorar</button>
+      <div class="notes">
+        <label
+          >01 / VER<textarea
+            id="note-see"
+            placeholder="O que você observou?"
+            maxlength="3000"
+          ></textarea></label
+        ><label
+          >02 / PENSAR<textarea
+            id="note-think"
+            placeholder="Qual é a sua explicação?"
+            maxlength="3000"
+          ></textarea></label
+        ><label
+          >03 / PERGUNTAR<textarea
+            id="note-ask"
+            placeholder="O que você investigaria agora?"
+            maxlength="3000"
+          ></textarea>
+        </label>
+      </div>
+      <div class="saved-heading">
+        <h3>Ensaios guardados</h3>
+        <button id="export" class="quiet"></button>
+      </div>
+      <div id="saved-runs"></div>
+      <div id="comparison"></div>
+      <p id="storage-status" role="status"></p>
     </dialog>
+    <dialog id="guide">
+      <div class="dialog-header">
+        <h2 id="guide-title"></h2>
+        <button
+          data-close="guide"
+          aria-label="Fechar explicação"
+          class="icon-button"
+        >
+          ×
+        </button>
+      </div>
+      <div id="guide-content"></div>
+      <button data-close="guide" class="save-button">Voltar à bancada</button>
+    </dialog>
+    <div id="toast" role="status"></div>
     <script type="module" src="/app.ts"></script>
   </body>
 </html>
