@@ -1,0 +1,23 @@
+{
+  "name": "termo-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite --host 0.0.0.0",
+    "build": "npm run check && vite build",
+    "test": "tsx --test physics.test.ts",
+    "check": "tsc --noEmit",
+    "test:browser": "tsx tests/browser.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

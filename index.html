@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#102b2c" />
+    <title>TermoLab — laboratório de termoquímica</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/"
+        >◈ <span>Termo<span class="accent">Lab</span></span></a
+      ><span class="header-note">CIÊNCIA QUE VOCÊ PODE EXPLORAR</span
+      ><button id="help">? Guia rápido</button>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <span class="eyebrow">LABORATÓRIO VIRTUAL / QUÍMICA</span>
+          <h1>Energia em transformação<span class="accent">.</span></h1>
+          <p>Experimente, observe e descubra a termoquímica.</p>
+        </div>
+        <span class="badge"><i></i> Experimento interativo</span>
+      </section>
+      <nav aria-label="Experimentos">
+        <button class="tab active" data-mode="heat">
+          01 <span>Calor e estados físicos</span></button
+        ><button class="tab" data-mode="reaction">
+          02 <span>Entalpia das reações</span></button
+        ><button class="tab" data-mode="law">
+          03 <span>Primeira lei</span>
+        </button>
+      </nav>
+      <section class="lab">
+        <div class="workspace">
+          <div class="panel-title">
+            <div>
+              <span class="eyebrow" id="experiment-number">EXPERIMENTO 01</span>
+              <h2 id="experiment-title">Da água ao vapor</h2>
+            </div>
+            <span class="model-tag">MODELO DIDÁTICO</span>
+          </div>
+          <div class="scene">
+            <canvas
+              id="particles"
+              aria-label="Visualização animada das partículas"
+            ></canvas>
+            <div id="state-label" class="state-label">SÓLIDO</div>
+            <div class="beaker">
+              <div id="liquid"></div>
+              <div class="ticks">— 300<br />— 200<br />— 100</div>
+              <span>H₂O</span>
+            </div>
+            <div id="energy-flow">↑ ENERGIA TÉRMICA</div>
+            <div class="hotplate">
+              <span id="heater-light"></span> TERMO LAB
+            </div>
+            <div class="scene-caption">
+              Representação microscópica ilustrativa · fora de escala
+            </div>
+          </div>
+          <div class="metrics">
+            <div>
+              <span id="metric-a-label">Temperatura</span
+              ><strong id="metric-a">−20 <small>°C</small></strong>
+            </div>
+            <div>
+              <span id="metric-b-label">Energia fornecida</span
+              ><strong id="metric-b">0 <small>kJ</small></strong>
+            </div>
+            <div>
+              <span id="metric-c-label">Estado físico</span
+              ><strong id="metric-c">Sólido</strong>
+            </div>
+          </div>
+          <div class="transport">
+            <button id="play" class="primary">▶ Iniciar</button
+            ><button id="reset">↺ Reiniciar</button
+            ><span id="time">0,0 s simulados</span>
+          </div>
+        </div>
+        <aside>
+          <section class="card">
+            <span class="eyebrow">SUA BANCADA</span>
+            <h2>Controle o experimento</h2>
+            <div id="controls"></div>
+            <p class="hint" id="control-hint"></p>
+          </section>
+          <section class="card chart-card">
+            <div class="chart-heading">
+              <h3 id="chart-title">Curva de aquecimento</h3>
+              <span class="chart-dot">● ao vivo</span>
+            </div>
+            <svg
+              id="chart"
+              viewBox="0 0 400 180"
+              role="img"
+              aria-label="Gráfico do experimento"
+            ></svg>
+            <p id="chart-caption"></p>
+          </section>
+        </aside>
+      </section>
+      <section class="insight">
+        <span class="insight-icon">✦</span>
+        <div>
+          <span class="eyebrow">O QUE ESTÁ ACONTECENDO?</span>
+          <h3 id="insight-title"></h3>
+          <p id="insight-text"></p>
+        </div>
+        <code id="formula"></code>
+      </section>
+      <footer>
+        TermoLab <span>Explore os conceitos. Conecte as ideias.</span
+        ><span>Termoquímica · Ensino médio</span>
+      </footer>
+    </main>
+    <dialog id="guide">
+      <h2>Seu laboratório de termoquímica</h2>
+      <p>
+        <b>Calor e estados:</b> escolha massa e potência, inicie o aquecimento e
+        observe os patamares de fusão e ebulição.
+      </p>
+      <p>
+        <b>Entalpia:</b> compare reações que liberam e absorvem energia. As
+        temperaturas usam um calorímetro ideal.
+      </p>
+      <p>
+        <b>Primeira lei:</b> altere calor e trabalho e acompanhe ΔU = Q + W. O
+        trabalho é positivo quando realizado sobre o sistema.
+      </p>
+      <p>
+        Modelos simplificados para estudo: pressão de 1 atm, sem perdas de
+        calor. Não são instruções para experiências reais.
+      </p>
+      <button id="close-guide" class="primary">Vamos explorar</button>
+    </dialog>
+    <script type="module" src="/app.ts"></script>
+  </body>
+</html>
