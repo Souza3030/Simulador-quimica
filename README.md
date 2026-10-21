@@ -1,17 +1,24 @@
-# TermoLab · A energia conta uma história
+# TermoLab 3.0 · A descoberta está nas suas mãos
 
-Um laboratório de investigação em **TypeScript estrito + Vite**, em português. Nove experiências conectam os assuntos do capítulo 14 de termoquímica: de sistemas e fronteiras à energia livre de Gibbs.
+Um laboratório de investigação em **TypeScript estrito + Vite**, em português. Onze experiências conectam os assuntos do capítulo 14 de termoquímica: de sistemas e fronteiras à energia livre de Gibbs, com investigações de Lei de Hess e identificação calorimétrica de metais. A interface usa azul e laranja e a logo do Senac fornecida como referência.
 
 ![Bancada de calorimetria do TermoLab](docs/termolab.png)
 
 ## Explorar
 
+- **Instrumentos na bancada:** arraste a ponta do termômetro até uma amostra ou escolha o alvo no seletor. Fora das amostras, a sonda não inventa uma leitura. Use as setas do teclado para mover a sonda; Shift acelera o deslocamento.
+- **Pistão manipulável:** no experimento de processos, arraste o pistão para definir o volume do estado final. As setas e Home/End também funcionam. Na isocórica, o volume fica travado.
+- **Exploração livre e roteiro guiado:** quatro etapas específicas para cada experiência, com objetivo, materiais, variável investigada, condições mantidas, aplicação e cuidado de interpretação.
+- **Cálculos ao vivo:** equações com os valores numéricos atuais, unidades, conversões e verificação dos balanços. A amostra desconhecida só é identificada quando chega ao equilíbrio.
+- **Tabela de medições:** registre até 60 leituras ao todo, com condições experimentais e valores sem perda de precisão no CSV. Os dados permanecem salvos neste navegador e também entram na exportação JSON do caderno.
+- **Ferramentas visuais:** partículas, setas de energia, sonda, passo de 1% e modo de bancada ampliada.
+
 - **Bancada e gráfico:** duas representações do mesmo estado, com partículas, recipientes, pistão, máquina térmica e balanços de energia.
 - **Linha do tempo reversível:** pause, avance ou retorne a qualquer ponto da experiência. Mudar um parâmetro reinicia a evolução.
-- **18 ideias prontas:** configurações para investigar contrastes, como um copo aberto e uma garrafa ideal, ou uma máquina real e o limite reversível.
+- **22 ideias prontas:** configurações para investigar contrastes, como um copo aberto e uma garrafa ideal, ou uma máquina real e o limite reversível.
 - **Caderno Ver–Pensar–Perguntar:** anotações, até 12 ensaios, retomada de configurações e exportação em JSON. Armazenamento local no navegador, sem conta.
 - **Comparação:** os dois últimos ensaios do assunto atual aparecem lado a lado no caderno. No gráfico, uma curva tracejada mostra o último ensaio guardado; processos com eixos incompatíveis não são sobrepostos.
-- **Nove hipóteses:** perguntas com feedback explicativo e progresso salvo.
+- **Onze hipóteses:** perguntas com feedback explicativo e progresso salvo.
 - Layout adaptado a celular, navegação por teclado, ajuda, descrição dos modelos e opção de reduzir movimento.
 
 ## Experiências do capítulo
@@ -28,6 +35,11 @@ Um laboratório de investigação em **TypeScript estrito + Vite**, em portuguê
 | Entalpia e aplicação à química      | Qual é a assinatura térmica de uma reação?       | Combustão do metano, neutralização e decomposição de CaCO₃                   |
 | Energia livre de Gibbs              | Em quais condições a transformação é favorecida? | ΔG = ΔH − TΔS e temperatura de inversão                                      |
 
+### Investigações adicionais
+
+- **Amostra desconhecida:** água e calorímetro recebem energia de um metal. Calcule o calor específico a partir do equilíbrio e compare com cobre, alumínio e ferro. Alterar a massa muda a temperatura final, mas não o calor específico do mesmo material.
+- **Lei de Hess:** compare a formação direta de CO₂ com a rota por CO. Inverta o sentido das etapas ou multiplique a quantidade de reação. Confira o cancelamento do intermediário e a soma das entalpias.
+
 ## Executar
 
 Requer **Node.js 22.12+**, validado com Node 24. No GitHub, use **Code → Download ZIP**, extraia e abra um terminal na pasta:
@@ -36,6 +48,17 @@ Requer **Node.js 22.12+**, validado com Node 24. No GitHub, use **Code → Downl
 npm ci
 npm start -- --port 5173
 ```
+
+Se já tiver uma cópia Git no computador, pare o servidor antes de atualizar:
+
+```sh
+git switch main
+git pull --ff-only origin main
+npm ci
+npm start
+```
+
+A versão nova mostra **TermoLab 3.0** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
 
 Para gerar os arquivos do site:
 
@@ -48,7 +71,7 @@ O resultado fica em `dist/`. O projeto usa apenas arquivos locais: não exige ba
 ## Verificar
 
 ```sh
-npm test             # 14 testes científicos e casos de fronteira
+npm test             # 20 testes científicos, instrumentos e casos de fronteira
 npm run check        # TypeScript estrito
 npm run build        # checagem de tipos + compilação
 npm run test:browser # servidor na porta 5173 deve estar ativo
@@ -56,12 +79,14 @@ npm run test:browser # servidor na porta 5173 deve estar ativo
 
 O teste de interface usa Chromium em `/usr/bin/chromium`. Para outro sistema, configure `CHROMIUM_PATH` com o caminho de um Chromium/Chrome instalado. `TERMOLAB_URL` altera o endereço do servidor de teste.
 
-O teste de navegador cobre os nove assuntos, 18 presets, nove gráficos, hipóteses, reprodução, controle do tempo, comparação, restauração, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. As capturas de validação ficam em `/tmp/termolab-v2-desktop.png` e `/tmp/termolab-v2-mobile.png` no ambiente da nuvem.
+O teste de navegador cobre os onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, comparação, restauração, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
 
 ## Organização
 
 - `physics.ts`: funções puras, unidades e modelos físicos.
 - `experiments.ts`: currículo, controles, configurações, perguntas e medições.
+- `lessons.ts`: objetivos, roteiros, interpretação e cálculos numéricos dos 11 experimentos.
+- `instruments.ts`: zonas de amostra e leitura física da sonda.
 - `scene.ts`: desenho dos aparatos e partículas em Canvas.
 - `app.ts`: reprodução, gráficos SVG, caderno e persistência.
 - `icons.ts`, `style.css`, `index.html`: identidade visual e interface.
@@ -79,4 +104,12 @@ A opção **Sobre este modelo** descreve as condições de cada experiência. Os
 - Reações: ΔH constante, banho inicialmente a 25 °C e recipiente ideal. O avanço é ilustrativo. A decomposição de CaCO₃ requer altas temperaturas na prática; a temperatura calculada é a do banho, não a da reação.
 - Gibbs: transformação hipotética a T e p constantes, ΔH e ΔS independentes da temperatura. ΔS em J/(mol·K) é convertido para kJ antes do balanço. Favorabilidade não determina velocidade.
 
-Projeto independente, inspirado na aprendizagem por exploração; sem vínculo com o PhET.
+- Termômetro: instrumento ideal, sem atraso e sem capacidade térmica. A temperatura é a da amostra sob a ponta; a sonda não altera o balanço. As duas câmaras de calorimetria representam as parcelas de uma mistura ideal.
+- Amostra desconhecida: água, recipiente e metal formam conjunto isolado. O cálculo usa a temperatura de equilíbrio sem arredondamento; a interface mostra valores arredondados. Não inclui incerteza experimental.
+- Hess: C(grafite) → CO → CO₂, com etapas −110,5 e −283,0 kJ/mol; total −393,5 kJ/mol. O percurso é uma coordenada didática, não tempo ou cinética. Inverter a reação inverte também a ordem e o sinal das etapas.
+
+## Identidade visual
+
+`public/senac.png` é a versão para a interface preparada por edição da referência visual enviada pelo usuário. O arquivo é servido localmente. A tela não depende de recursos carregados de sites externos.
+
+Projeto educacional independente, inspirado na aprendizagem por exploração do PhET. Não utiliza o código nem se apresenta como uma simulação oficial do PhET.

@@ -19,7 +19,7 @@ try {
     "O encontro de duas temperaturas.",
   );
   await page.screenshot({
-    path: "/tmp/termolab-v2-desktop.png",
+    path: "/tmp/termolab-senac-desktop.png",
     fullPage: true,
   });
   // Playback, pause and deterministic scrubbing.
@@ -102,9 +102,10 @@ try {
     await expect(page.locator("#feedback")).toHaveText(e.explanation);
   }
   await expect(page.locator("#challenge-progress")).toHaveText(
-    "9/9 descobertas",
+    "11/11 descobertas",
   );
-  await expect(page.locator("#visited-count")).toHaveText("9 / 9");
+  await expect(page.locator("#visited-count")).toHaveText("11 / 11");
+  await page.locator('[data-mode="gibbs"]').click();
   // Gibbs threshold and the engine's reversible limit.
   await page.locator("#param-dh").fill("40");
   await page.locator("#param-ds").fill("100");
@@ -127,7 +128,7 @@ try {
     ),
   );
   await page.screenshot({
-    path: "/tmp/termolab-v2-mobile.png",
+    path: "/tmp/termolab-senac-mobile.png",
     fullPage: true,
   });
   await page.locator('[data-mode="gibbs"]').click();
@@ -149,9 +150,159 @@ try {
   await expect(page.locator("#guide")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator("#guide")).not.toBeVisible();
+  // New investigation tools: sensor, guided protocol, measurements and piston.
+  const toolsPage = await browser.newPage({
+    viewport: { width: 1440, height: 1000 },
+    reducedMotion: "reduce",
+  });
+  toolsPage.on("pageerror", (e) => errors.push(e.message));
+  await toolsPage.goto(process.env.TERMOLAB_URL || "http://127.0.0.1:5173");
+  await expect(toolsPage.getByAltText("Senac")).toBeVisible();
+  assert.ok(
+    await toolsPage
+      .getByAltText("Senac")
+      .evaluate((img: HTMLImageElement) => img.naturalWidth > 100),
+  );
+  await expect(toolsPage.locator("#probe-reading")).toHaveText("80,0 °C");
+  await toolsPage.locator("#probe-target").selectOption("1");
+  await expect(toolsPage.locator("#probe-reading")).toHaveText("20,0 °C");
+  const sensor = await toolsPage.locator("#probe").boundingBox(),
+    stage = await toolsPage.locator("#scene").boundingBox();
+  assert.ok(sensor && stage);
+  await toolsPage.mouse.move(
+    sensor.x + sensor.width / 2,
+    sensor.y + sensor.height - 4,
+  );
+  await toolsPage.mouse.down();
+  await toolsPage.mouse.move(
+    stage.x + stage.width * 0.5,
+    stage.y + stage.height * 0.58,
+    { steps: 12 },
+  );
+  await toolsPage.mouse.up();
+  await expect(toolsPage.locator("#probe-reading")).toHaveText("— °C");
+  await toolsPage.locator("#probe").focus();
+  await toolsPage.keyboard.press("ArrowLeft");
+  await toolsPage.locator("#probe-target").selectOption("0");
+  await expect(toolsPage.locator("#probe-reading")).toHaveText("80,0 °C");
+  await toolsPage.locator("#probe-toggle").click();
+  await expect(toolsPage.locator("#probe")).toBeHidden();
+  await toolsPage.locator("#probe-toggle").click();
+  await toolsPage.locator("#energy-toggle").click();
+  await expect(toolsPage.locator("#energy-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await toolsPage.locator("#energy-toggle").click();
+  await toolsPage.locator("#micro").click();
+  await expect(toolsPage.locator("#micro")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await toolsPage.locator("#micro").click();
+  await toolsPage.locator("#mode-guided").click();
+  await expect(toolsPage.locator("#guided-number")).toHaveText("1/4");
+  await toolsPage.locator("#guided-next").click();
+  await toolsPage.locator("#guided-next").click();
+  await expect(toolsPage.locator("#guided-number")).toHaveText("3/4");
+  await expect(toolsPage.locator("#panel-calculations")).toBeVisible();
+  await toolsPage.locator("#progress").fill("1000");
+  await expect(toolsPage.locator("#live-calculations")).toContainText(
+    "45,71 °C",
+  );
+  await expect(toolsPage.locator("#live-calculations")).toContainText(
+    "0,0000 kJ",
+  );
+  await toolsPage.locator("#guided-next").click();
+  await toolsPage.locator("#guided-next").click();
+  await expect(toolsPage.locator("#notebook")).toBeVisible();
+  await toolsPage
+    .getByRole("button", { name: "Fechar caderno", exact: true })
+    .click();
+  await toolsPage.locator("#mode-free").click();
+  await toolsPage.locator("#tab-data").click();
+  await toolsPage.locator("#progress").fill("0");
+  await toolsPage.locator("#record-reading").click();
+  await toolsPage.locator("#progress").fill("1000");
+  await toolsPage.locator("#record-reading").click();
+  await expect(toolsPage.locator("#data-table tbody tr")).toHaveCount(2);
+  const csvPromise = toolsPage.waitForEvent("download");
+  await toolsPage.locator("#export-csv").click();
+  const csv = await csvPromise;
+  const csvPath = await csv.path();
+  assert.ok(csvPath);
+  const csvText = await readFile(csvPath, "utf8");
+  assert.equal(csvText.trim().split(/\r?\n/).length, 3);
+  assert.match(csvText, /avanco_percentual/);
+  assert.match(csvText, /80/);
+  assert.match(csvText, /45.714285/);
+  await toolsPage.reload();
+  await toolsPage.locator("#tab-data").click();
+  await expect(toolsPage.locator("#data-table tbody tr")).toHaveCount(2);
+  await toolsPage
+    .getByRole("button", { name: "Excluir leitura 1", exact: true })
+    .click();
+  await expect(toolsPage.locator("#data-table tbody tr")).toHaveCount(1);
+  await toolsPage.locator("#tab-data").focus();
+  await toolsPage.keyboard.press("ArrowLeft");
+  await expect(toolsPage.locator("#tab-calculations")).toBeFocused();
+  await expect(toolsPage.locator("#panel-calculations")).toBeVisible();
+  await toolsPage.locator('[data-mode="process"]').click();
+  await toolsPage.locator("#piston-handle").focus();
+  await toolsPage.keyboard.press("Home");
+  await expect(toolsPage.locator("#param-ratio")).toHaveValue("0.5");
+  assert.match(
+    await toolsPage.locator(".metric strong").first().innerText(),
+    /200,0/,
+  );
+  const handle = await toolsPage.locator("#piston-handle").boundingBox();
+  assert.ok(handle);
+  await toolsPage.mouse.move(handle.x + handle.width / 2, handle.y + 10);
+  await toolsPage.mouse.down();
+  await toolsPage.mouse.move(handle.x + handle.width / 2, handle.y - 35, {
+    steps: 10,
+  });
+  await toolsPage.mouse.up();
+  assert.ok(Number(await toolsPage.locator("#param-ratio").inputValue()) > 0.5);
+  await toolsPage.locator("#param-process").selectOption("1");
+  await expect(toolsPage.locator("#piston-handle")).toBeHidden();
+  await toolsPage.locator('[data-mode="identify"]').click();
+  await toolsPage.locator("#tab-calculations").click();
+  await expect(toolsPage.locator("#live-calculations")).toContainText(
+    "Aguarde o equilíbrio",
+  );
+  await toolsPage.locator("#progress").fill("1000");
+  await expect(toolsPage.locator("#live-calculations")).toContainText("0,385");
+  await expect(toolsPage.locator("#live-calculations")).toContainText("Cobre");
+  await toolsPage.locator('[data-mode="hess"]').click();
+  await toolsPage.locator("#progress").fill("500");
+  assert.match(
+    await toolsPage.locator(".metric strong").first().innerText(),
+    /-110,5/,
+  );
+  await toolsPage.locator("#progress").fill("1000");
+  await expect(toolsPage.locator("#live-calculations")).toContainText("-393,5");
+  await toolsPage.locator("#focus").click();
+  await expect(toolsPage.locator("body")).toHaveClass(/focus-mode/);
+  await toolsPage.locator("#focus").click();
+  await toolsPage.setViewportSize({ width: 390, height: 844 });
+  await toolsPage.locator('[data-mode="mix"]').click();
+  await toolsPage.locator("#mode-guided").click();
+  assert.ok(
+    await toolsPage.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await toolsPage.locator("#tab-data").click();
+  assert.ok(
+    await toolsPage.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await toolsPage.close();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: nine topics, 18 presets, nine graphs, nine challenges, playback, scrubbing, conservation display, snapshots, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion; no browser errors.",
+    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export; no browser errors.",
   );
 } finally {
   await browser.close();

@@ -205,3 +205,53 @@ export function gibbs(dh: number, ds: number, temperature: number) {
   positive(temperature);
   return dh - (temperature * ds) / 1000;
 }
+
+/** Carbon combustion at standard reference conditions. Values in kJ per mol C. */
+export function hessPath(
+  amount: number,
+  reverse: boolean,
+  steps: boolean,
+  progress: number,
+) {
+  positive(amount);
+  const f = clamp(progress, 0, 1),
+    sign = reverse ? -1 : 1;
+  // Reverse the order as well as the signs for the reverse reaction.
+  const first = reverse ? -283 : -110.5,
+    second = reverse ? -110.5 : -283;
+  const q = steps
+    ? f <= 0.5
+      ? first * f * 2
+      : first + second * (f - 0.5) * 2
+    : -393.5 * f;
+  return {
+    q: q * amount * sign,
+    total: -393.5 * amount * sign,
+    first: first * amount * sign,
+    second: second * amount * sign,
+  };
+}
+export const unknownMetals = [
+  { name: "Cobre", c: 0.385 },
+  { name: "Alumínio", c: 0.897 },
+  { name: "Ferro", c: 0.449 },
+] as const;
+/** Infer c (J/g K) from a metal + water equilibrium, with a calorimeter at water initial T. */
+export function inferSpecificHeat(
+  metalMass: number,
+  metalT: number,
+  waterMass: number,
+  waterT: number,
+  equilibrium: number,
+  capacity: number,
+) {
+  positive(metalMass, waterMass);
+  if (capacity < 0 || equilibrium <= waterT || equilibrium >= metalT)
+    throw new RangeError(
+      "Equilíbrio deve ficar entre as temperaturas iniciais.",
+    );
+  return (
+    ((waterMass * 4.18 + capacity) * (equilibrium - waterT)) /
+    (metalMass * (metalT - equilibrium))
+  );
+}

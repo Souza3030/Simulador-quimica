@@ -9,6 +9,10 @@ import {
   reactions,
   sensibleTemperature,
   waterState,
+  hessPath,
+  unknownMetals,
+  mixTemperature,
+  inferSpecificHeat,
 } from "./physics.ts";
 import type { GasProcess } from "./physics.ts";
 export type Mode =
@@ -20,7 +24,9 @@ export type Mode =
   | "first"
   | "second"
   | "enthalpy"
-  | "gibbs";
+  | "gibbs"
+  | "hess"
+  | "identify";
 export type Params = Record<string, number>;
 export interface Control {
   key: string;
@@ -369,6 +375,90 @@ export const experiments: Experiment[] = [
     duration: 1,
   },
 ];
+experiments.push(
+  {
+    id: "identify",
+    number: "10",
+    name: "Amostra desconhecida",
+    title: "Que metal está na sua bancada?",
+    subtitle:
+      "Use a calorimetria para transformar uma temperatura em uma identificação.",
+    icon: "thermo",
+    group: "INVESTIGAR",
+    defaults: {
+      sample: 0,
+      metalMass: 150,
+      metalT: 80,
+      waterMass: 200,
+      waterT: 20,
+      capacity: 50,
+    },
+    controls: [
+      select("sample", "Amostra codificada", [
+        "Amostra A",
+        "Amostra B",
+        "Amostra C",
+      ]),
+      range("metalMass", "Massa do metal", 50, 300, 25, "g"),
+      range("metalT", "Temperatura inicial do metal", 60, 95, 5, "°C"),
+      range("waterMass", "Massa da água", 100, 400, 25, "g"),
+      range("waterT", "Temperatura inicial da água", 15, 30, 5, "°C"),
+      range("capacity", "Capacidade do calorímetro", 0, 150, 25, "J/K"),
+    ],
+    presets: [
+      { name: "Amostra A", values: { sample: 0 } },
+      { name: "Amostra B", values: { sample: 1 } },
+    ],
+    formula:
+      "cmetal = (mágua · cágua + C) · (Tf − Tágua) / [mmetal · (Tmetal − Tf)]",
+    model:
+      "Metal inicialmente quente em contato com água fria, em calorímetro isolado. Sem perdas, trabalho ou mudança de fase; calorímetro inicia na temperatura da água. c é constante. Amostras ideais: cobre 0,385, alumínio 0,897 e ferro 0,449 J/(g·K). A evolução é ilustrativa e conserva energia. A identificação usa o equilíbrio, não uma leitura intermediária.",
+    question:
+      "Para determinar o calor específico, em qual instante devemos usar a temperatura da mistura?",
+    choices: [
+      "Assim que o metal toca a água.",
+      "Quando metal e água atingem equilíbrio térmico.",
+      "Antes de colocar o metal.",
+    ],
+    correct: 1,
+    explanation:
+      "A equação usa uma única temperatura final para metal, água e calorímetro. Isso só é válido no equilíbrio.",
+    duration: 12,
+  },
+  {
+    id: "hess",
+    number: "11",
+    name: "Lei de Hess",
+    title: "Dois caminhos. A mesma chegada.",
+    subtitle:
+      "Some etapas, inverta a reação e descubra por que a entalpia é função de estado.",
+    icon: "energy",
+    group: "INVESTIGAR",
+    defaults: { amount: 1, path: 1, reverse: 0 },
+    controls: [
+      select("path", "Caminho da reação", [
+        "Direto: carbono → CO₂",
+        "Em etapas: carbono → CO → CO₂",
+      ]),
+      select("reverse", "Sentido", ["Formação de CO₂", "Reação inversa"]),
+      range("amount", "Quantidade de carbono", 0.5, 3, 0.5, "mol"),
+    ],
+    presets: [
+      { name: "Caminho direto", values: { path: 0, reverse: 0 } },
+      { name: "Inverter as etapas", values: { path: 1, reverse: 1 } },
+    ],
+    formula: "ΔHtotal = Σ ΔHetapas",
+    model:
+      "Entalpias de referência: C(grafite) + ½O₂(g) → CO(g), ΔH = −110,5 kJ/mol; CO(g) + ½O₂(g) → CO₂(g), ΔH = −283,0 kJ/mol. Soma: C(grafite) + O₂(g) → CO₂(g), ΔH = −393,5 kJ/mol. Inverta também a ordem das etapas na reação inversa. O avanço é uma coordenada de percurso, não uma cinética nem uma previsão de espontaneidade.",
+    question: "Ao inverter uma equação termoquímica, o que acontece com ΔH?",
+    choices: ["Mantém o sinal.", "Vira zero.", "Inverte o sinal."],
+    correct: 2,
+    explanation:
+      "A reação inversa liga os mesmos estados em sentido oposto. Por isso, ΔHinversa = −ΔHdireta; multiplicar a equação também multiplica sua entalpia.",
+    duration: 10,
+  },
+);
+
 export interface Metric {
   label: string;
   value: number;
@@ -397,7 +487,67 @@ export function evaluate(id: Mode, p: Params, t: number): Result {
     temperatures: number[] = [],
     values: Record<string, number> = {},
     plotValue = 0;
-  if (id === "boundaries") {
+  if (id === "identify") {
+    const metal = unknownMetals[p.sample],
+      eq = mixTemperature(
+        p.metalMass,
+        metal.c,
+        p.metalT,
+        p.waterMass,
+        4.18,
+        p.waterT,
+        p.capacity,
+      ),
+      hot = p.metalT + (eq - p.metalT) * f,
+      cold = p.waterT + (eq - p.waterT) * f,
+      qWater = p.waterMass * 4.18 * (cold - p.waterT),
+      qCup = p.capacity * (cold - p.waterT),
+      qMetal = p.metalMass * metal.c * (hot - p.metalT);
+    temperatures = [hot, cold];
+    values = {
+      eq,
+      hot,
+      cold,
+      qWater,
+      qCup,
+      qMetal,
+      c: inferSpecificHeat(
+        p.metalMass,
+        p.metalT,
+        p.waterMass,
+        p.waterT,
+        eq,
+        p.capacity,
+      ),
+    };
+    metrics = [
+      metric("Temperatura do metal", hot, "°C", "warm"),
+      metric("Temperatura da água", cold, "°C", "cool"),
+      metric("Calor recebido pela água", qWater / 1000, "kJ"),
+    ];
+    status =
+      f === 1 ? "EQUILÍBRIO · AMOSTRA IDENTIFICADA" : "AGUARDANDO EQUILÍBRIO";
+    insight =
+      f === 1
+        ? `O calor específico calculado é ${values.c.toFixed(3)} J/(g·K), compatível com ${metal.name.toLowerCase()} na tabela de referência.`
+        : "Meça as massas e temperaturas iniciais. Depois, espere as duas temperaturas coincidirem para calcular o calor específico do metal.";
+    plotValue = hot;
+  } else if (id === "hess") {
+    const r = hessPath(p.amount, !!p.reverse, !!p.path, f);
+    values = { ...r };
+    metrics = [
+      metric("ΔH do percurso realizado", r.q, "kJ"),
+      metric("ΔH total previsto", r.total, "kJ"),
+      metric("Quantidade de reação", p.amount, "mol"),
+    ];
+    status = p.reverse
+      ? "REAÇÃO INVERSA"
+      : p.path
+        ? "SOMA DAS ETAPAS"
+        : "CAMINHO DIRETO";
+    insight = `${p.reverse ? "Ao inverter o sentido, o sinal da entalpia muda." : "A soma das duas etapas é igual ao caminho direto."} Para ${p.amount} mol, ΔH total = ${r.total.toFixed(1)} kJ. O valor depende dos estados inicial e final.`;
+    plotValue = r.q;
+  } else if (id === "boundaries") {
     const r = boundaryTemperature(
       p.kind,
       p.mass,

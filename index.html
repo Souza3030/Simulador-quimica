@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#172634" />
+    <meta name="theme-color" content="#004b80" />
     <meta
       name="description"
-      content="Explore nove experiências de termoquímica. Faça previsões, controle o tempo e compare suas descobertas no TermoLab."
+      content="Explore onze experiências de termoquímica. Faça previsões, controle o tempo e compare suas descobertas no TermoLab."
     />
-    <title>TermoLab — a energia conta uma história</title>
+    <title>TermoLab | Laboratório de Termoquímica</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
@@ -16,21 +16,22 @@
     <div class="app-shell">
       <aside class="sidebar">
         <a href="/" class="brand" aria-label="TermoLab início"
-          ><span class="brand-mark">t<span>°</span></span
-          ><span
-            >termo<span class="brand-light">lab</span
-            ><small>UM LABORATÓRIO DE IDEIAS</small></span
+          ><span class="logo-frame"
+            ><img src="/senac.png" alt="Senac" width="132" height="66" /></span
+          ><span class="brand-divider"></span
+          ><span class="brand-title"
+            >TermoLab<small>LABORATÓRIO VIRTUAL</small></span
           ></a
         >
         <div class="chapter">
           <span class="eyebrow">TRILHA DE EXPLORAÇÃO</span>
-          <h2>A ciência da energia.</h2>
+          <h2>Explore a termoquímica.</h2>
           <p>Termoquímica & termodinâmica</p>
         </div>
         <nav id="topics" aria-label="Assuntos do capítulo"></nav>
         <div class="journey">
           <div>
-            <span>Sua jornada</span><strong id="visited-count">1 / 9</strong>
+            <span>Sua jornada</span><strong id="visited-count">1 / 11</strong>
           </div>
           <div class="journey-track"><span id="visited-bar"></span></div>
           <p>Uma descoberta conecta a próxima.</p>
@@ -40,7 +41,7 @@
       <div class="main-shell">
         <header class="topbar">
           <span class="breadcrumb"
-            >SEU ESPAÇO DE DESCOBERTAS <span>/</span> <b>Laboratório</b></span
+            >EDUCAÇÃO QUE TRANSFORMA <span>/</span> <b>Laboratório</b></span
           >
           <div>
             <button id="motion" class="quiet" aria-pressed="false">
@@ -52,14 +53,21 @@
           <section class="intro">
             <div>
               <div class="intro-kicker">
-                <span class="tiny-dot"></span> APRENDER É EXPERIMENTAR
+                <span class="tiny-dot"></span> CIÊNCIA NA PRÁTICA · CAPÍTULO 14
               </div>
-              <h1>A energia conta uma história<span>.</span></h1>
-              <p>Faça uma pergunta. Mude uma variável. Descubra uma conexão.</p>
+              <h1>A descoberta está<br />nas suas <em>mãos.</em></h1>
+              <p>
+                Explore, meça e explique. Um laboratório inteiro para dar vida à
+                termoquímica.
+              </p>
             </div>
-            <div class="chapter-stamp">
-              <span>CAPÍTULO</span><strong>14<span>↗</span></strong
-              ><small>9 perspectivas · infinitas perguntas</small>
+            <div class="hero-lab" aria-hidden="true">
+              <span class="hero-orbit orbit-one"></span
+              ><span class="hero-orbit orbit-two"></span>
+              <div class="hero-atom"><i></i><i></i><i></i></div>
+              <div class="hero-caption">
+                OBSERVE <span>→</span> EXPERIMENTE <span>→</span> DESCUBRA
+              </div>
             </div>
           </section>
           <div class="experiment-heading">
@@ -70,6 +78,36 @@
             </div>
             <button id="model" class="model-link"></button>
           </div>
+          <div class="experience-mode">
+            <div
+              class="mode-switch"
+              role="group"
+              aria-label="Modo de exploração"
+            >
+              <button id="mode-free" aria-pressed="true" class="active">
+                Exploração livre</button
+              ><button id="mode-guided" aria-pressed="false">
+                Roteiro guiado
+              </button>
+            </div>
+            <div class="experience-tags">
+              <span id="lesson-topic"></span><span>Interativo</span>
+            </div>
+          </div>
+          <section
+            id="guided-strip"
+            class="guided-strip"
+            hidden
+            aria-label="Roteiro guiado"
+          >
+            <span id="guided-number"></span>
+            <div>
+              <strong id="guided-title"></strong>
+              <p id="guided-instruction"></p>
+            </div>
+            <button id="guided-prev" aria-label="Etapa anterior">←</button
+            ><button id="guided-next">Próxima etapa →</button>
+          </section>
           <section class="lab-grid" aria-label="Bancada interativa">
             <div class="bench">
               <div class="bench-toolbar">
@@ -81,16 +119,54 @@
                   ></button
                   ><button id="view-chart" aria-pressed="false"></button>
                 </div>
-                <button id="micro" aria-pressed="true"></button>
+                <div class="bench-options">
+                  <button id="probe-toggle" aria-pressed="true">
+                    Termômetro</button
+                  ><button id="energy-toggle" aria-pressed="true">
+                    Fluxo de energia</button
+                  ><button id="micro" aria-pressed="true"></button
+                  ><button
+                    id="focus"
+                    aria-pressed="false"
+                    aria-label="Ampliar bancada"
+                  >
+                    ⛶
+                  </button>
+                </div>
               </div>
               <div class="stage">
                 <span class="stage-status" id="status"></span
-                ><span class="stage-id">TL / EXPERIMENTAL SERIES</span
-                ><canvas
-                  id="scene"
-                  role="img"
-                  aria-label="Representação visual do experimento"
-                ></canvas>
+                ><span class="stage-id">BANCADA INTERATIVA</span>
+                <div id="apparatus">
+                  <canvas
+                    id="scene"
+                    role="img"
+                    aria-label="Representação visual do experimento"
+                  ></canvas
+                  ><button
+                    id="piston-handle"
+                    class="piston-handle"
+                    role="slider"
+                    aria-label="Arrastar pistão: razão de volume"
+                    aria-valuemin="0.5"
+                    aria-valuemax="2.5"
+                    aria-valuenow="1.8"
+                    hidden
+                  >
+                    <span>↕ Arraste o pistão</span></button
+                  ><button
+                    id="probe"
+                    class="probe"
+                    aria-label="Mover termômetro. Use as setas do teclado ou arraste."
+                    aria-describedby="probe-hint"
+                  >
+                    <span class="probe-display"
+                      ><small id="probe-sample">Água quente</small
+                      ><strong id="probe-reading">80,0 °C</strong></span
+                    ><span class="probe-stem"></span
+                    ><span class="probe-tip"></span>
+                  </button>
+                </div>
                 <div id="chart-view" hidden>
                   <svg
                     id="chart"
@@ -102,6 +178,15 @@
                 </div>
                 <div class="stage-caption" id="stage-caption"></div>
               </div>
+              <div id="probe-tools" class="probe-tools">
+                <span id="probe-hint"
+                  >Arraste a ponta do termômetro até uma amostra.</span
+                ><label for="probe-target">Medir em</label
+                ><select
+                  id="probe-target"
+                  aria-label="Posicionar termômetro"
+                ></select>
+              </div>
               <div id="metrics" class="metrics"></div>
               <div class="timeline" id="timeline">
                 <button id="play" class="play-button"></button
@@ -110,6 +195,13 @@
                   class="reset-button"
                   aria-label="Reiniciar experimento"
                 ></button>
+                <button
+                  id="step-forward"
+                  class="reset-button"
+                  aria-label="Avançar um passo"
+                >
+                  +1%
+                </button>
                 <div class="scrubber">
                   <div>
                     <span id="time-label">INÍCIO</span
@@ -137,13 +229,13 @@
             </div>
             <aside class="controls-card">
               <div class="section-heading">
-                <span class="eyebrow">O EXPERIMENTO É SEU</span
+                <span class="eyebrow">PAINEL DE CONTROLE</span
                 ><span class="control-icon" id="control-icon"></span>
               </div>
-              <h3>Altere. Observe. Conecte.</h3>
+              <h3>Prepare seu experimento</h3>
               <div id="controls"></div>
               <div class="preset-section">
-                <span>COMECE COM UMA IDEIA</span>
+                <span>CONFIGURAÇÕES PARA INVESTIGAR</span>
                 <div id="presets"></div>
               </div>
               <button id="save-run" class="save-button"></button>
@@ -151,6 +243,77 @@
                 Guarde dois ensaios e compare no caderno.
               </p>
             </aside>
+          </section>
+          <section class="learning-panel" aria-label="Detalhes do experimento">
+            <div
+              class="learning-tabs"
+              role="tablist"
+              aria-label="Materiais de investigação"
+            >
+              <button
+                id="tab-protocol"
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-protocol"
+                data-learning="protocol"
+              >
+                01 <span>Roteiro e objetivos</span></button
+              ><button
+                id="tab-calculations"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-calculations"
+                data-learning="calculations"
+                tabindex="-1"
+              >
+                02 <span>Cálculos ao vivo</span></button
+              ><button
+                id="tab-data"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-data"
+                data-learning="data"
+                tabindex="-1"
+              >
+                03 <span>Tabela de dados</span>
+              </button>
+            </div>
+            <div
+              id="panel-protocol"
+              role="tabpanel"
+              aria-labelledby="tab-protocol"
+            ></div>
+            <div
+              id="panel-calculations"
+              role="tabpanel"
+              aria-labelledby="tab-calculations"
+              hidden
+            >
+              <div class="calculation-intro">
+                <span class="live-dot"></span> Acompanhe as contas com os
+                valores da sua bancada.
+              </div>
+              <div id="live-calculations"></div>
+            </div>
+            <div
+              id="panel-data"
+              role="tabpanel"
+              aria-labelledby="tab-data"
+              hidden
+            >
+              <div class="data-toolbar">
+                <div>
+                  <h3>Da observação à evidência.</h3>
+                  <p>
+                    Registre instantes da experiência e compare as medições.
+                    Dados salvos neste navegador.
+                  </p>
+                </div>
+                <button id="record-reading">+ Registrar leitura</button
+                ><button id="export-csv">Baixar CSV</button>
+              </div>
+              <div id="data-table"></div>
+            </div>
           </section>
           <section class="discovery-grid">
             <article class="insight-card">
@@ -184,7 +347,7 @@
           </section>
           <footer>
             <span>Feito para quem pergunta <b>por quê.</b></span
-            ><span>TermoLab · Modelos didáticos · Ensino médio</span>
+            ><span>TermoLab 3.0 · Projeto educacional · Ensino médio</span>
           </footer>
         </main>
       </div>
