@@ -1,6 +1,7 @@
 import { chromium, expect } from "@playwright/test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { numericChallenge } from "../investigation.ts";
 import { experiments } from "../experiments.ts";
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
@@ -299,10 +300,112 @@ try {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   );
+  // Advanced numerical investigations share the current experimental conditions.
+  await toolsPage.setViewportSize({ width: 1512, height: 1100 });
+  await toolsPage.locator("#mode-free").click();
+  for (const e of experiments) {
+    await toolsPage.locator(`[data-mode="${e.id}"]`).click();
+    await toolsPage.locator("#tab-advanced").click();
+    await expect(toolsPage.locator("#advanced-analysis")).not.toContainText(
+      /NaN|Infinity|undefined/,
+    );
+    await expect(toolsPage.locator("#numeric-solution")).toBeHidden();
+    await toolsPage.locator("#numeric-answer").fill("abc");
+    await toolsPage
+      .getByRole("button", { name: "Conferir resposta", exact: true })
+      .click();
+    await expect(toolsPage.locator("#numeric-feedback")).toContainText(
+      "número válido",
+    );
+    await toolsPage.locator("#numeric-answer").fill("999999");
+    await toolsPage
+      .getByRole("button", { name: "Conferir resposta", exact: true })
+      .click();
+    await expect(toolsPage.locator("#numeric-feedback")).toContainText(
+      "Ainda não",
+    );
+    const task = numericChallenge(e.id, e.defaults);
+    await toolsPage
+      .locator("#numeric-answer")
+      .fill(task.answer.toFixed(4).replace(".", ","));
+    await toolsPage
+      .getByRole("button", { name: "Conferir resposta", exact: true })
+      .click();
+    await expect(toolsPage.locator("#numeric-feedback")).toContainText(
+      "Correto!",
+    );
+    await toolsPage.locator("#reveal-solution").click();
+    await expect(toolsPage.locator("#numeric-solution")).toBeVisible();
+    await toolsPage.locator("#reveal-solution").click();
+    await expect(toolsPage.locator("#numeric-solution")).toBeHidden();
+  }
+  await expect(toolsPage.locator("#numeric-progress")).toHaveText(
+    "11/11 temas resolvidos",
+  );
+  await toolsPage.reload();
+  await toolsPage.locator("#tab-advanced").click();
+  await expect(toolsPage.locator("#numeric-progress")).toHaveText(
+    "11/11 temas resolvidos",
+  );
+  await toolsPage.locator('[data-mode="identify"]').click();
+  await toolsPage.locator("#thermometer-resolution").selectOption("2");
+  await expect(
+    toolsPage.locator("#advanced-analysis tbody tr").last(),
+  ).toContainText("Cobre, Ferro");
+  await toolsPage.locator("#thermometer-resolution").selectOption("0.01");
+  await expect(
+    toolsPage.locator("#advanced-analysis tbody tr").last(),
+  ).toContainText("Cobre");
+  await expect(
+    toolsPage.locator("#advanced-analysis tbody tr").last(),
+  ).not.toContainText("Ferro");
+  await toolsPage.locator("#numeric-answer").fill("0,385");
+  await toolsPage.locator("#progress").fill("500");
+  await expect(toolsPage.locator("#numeric-answer")).toHaveValue("0,385");
+  await toolsPage.locator("#param-metalMass").fill("200");
+  await expect(toolsPage.locator("#numeric-answer")).toHaveValue("");
+  await toolsPage.locator('[data-mode="phase"]').click();
+  for (const [i, phase] of [
+    "Sólido",
+    "Fusão",
+    "Líquido",
+    "Ebulição",
+    "Gasoso",
+  ].entries()) {
+    await toolsPage.locator(`[data-stage="${i}"]`).click();
+    await expect(toolsPage.locator("#status")).toContainText(
+      phase.toUpperCase(),
+    );
+  }
+  await toolsPage.locator("#tab-advanced").focus();
+  await toolsPage.keyboard.press("ArrowRight");
+  await expect(toolsPage.locator("#tab-protocol")).toBeFocused();
+  await toolsPage.keyboard.press("End");
+  await expect(toolsPage.locator("#tab-advanced")).toBeFocused();
+  await toolsPage.locator('[data-mode="identify"]').click();
+  await toolsPage.locator("#thermometer-resolution").selectOption("2");
+  await toolsPage.screenshot({
+    path: "/tmp/termolab-investigation-desktop.png",
+    fullPage: true,
+  });
+  await toolsPage.setViewportSize({ width: 390, height: 844 });
+  await toolsPage.screenshot({
+    path: "/tmp/termolab-investigation-mobile.png",
+    fullPage: true,
+  });
+  for (const id of ["identify", "process", "phase"]) {
+    await toolsPage.locator(`[data-mode="${id}"]`).click();
+    assert.ok(
+      await toolsPage.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+      `Advanced mobile overflow: ${id}`,
+    );
+  }
   await toolsPage.close();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export; no browser errors.",
+    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export, 11 numerical challenges, uncertainty controls, phase shortcuts and advanced mobile layout; no browser errors.",
   );
 } finally {
   await browser.close();

@@ -3,6 +3,13 @@ import type { Mode, Params, Result } from "./experiments.ts";
 import { gibbs } from "./physics.ts";
 import { icon } from "./icons.ts";
 import { drawScene } from "./scene.ts";
+import {
+  analysis,
+  numericChallenge,
+  parseAnswer,
+  acceptsAnswer,
+  phaseStages,
+} from "./investigation.ts";
 import { lessons, calculations } from "./lessons.ts";
 import { sampleTargets, readProbe } from "./instruments.ts";
 import { clamp, R } from "./physics.ts";
@@ -39,6 +46,7 @@ interface Notebook {
   snapshots: Snapshot[];
   measurements: Snapshot[];
   solved: Mode[];
+  numericSolved: Mode[];
   visited: Mode[];
   selected: Mode;
 }
@@ -47,6 +55,7 @@ const emptyNotebook = (): Notebook => ({
   snapshots: [],
   measurements: [],
   solved: [],
+  numericSolved: [],
   visited: [],
   selected: "mix",
 });
@@ -70,6 +79,8 @@ function load(): Notebook {
       if (typeof raw.notes?.[key] === "string")
         out.notes[key] = raw.notes[key].slice(0, 3000);
     if (Array.isArray(raw.solved)) out.solved = raw.solved.filter(isMode);
+    if (Array.isArray(raw.numericSolved))
+      out.numericSolved = raw.numericSolved.filter(isMode);
     if (Array.isArray(raw.visited)) out.visited = raw.visited.filter(isMode);
     if (isMode(raw.selected)) out.selected = raw.selected;
     if (Array.isArray(raw.snapshots))
@@ -119,7 +130,7 @@ let notebook = load(),
   showChart = false,
   micro = true,
   reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-type LearningTab = "protocol" | "calculations" | "data";
+type LearningTab = "protocol" | "calculations" | "data" | "advanced";
 let guided = false,
   guidedStep = 0,
   learningTab: LearningTab = "protocol",
@@ -355,6 +366,7 @@ function render() {
   updateProbe();
   updatePiston();
   if (learningTab === "calculations") renderCalculations();
+  if (learningTab === "advanced") renderAdvanced();
   if (showChart) renderChart();
 }
 interface Point {
@@ -550,6 +562,7 @@ function renderNotebook() {
         );
         persist();
         renderNotebook();
+        if (learningTab === "advanced") renderAdvanced();
         if (showChart) renderChart();
       }),
   );
@@ -575,6 +588,7 @@ $("#save-run").onclick = () => {
       ? "Ensaio guardado. Compare seus resultados no caderno."
       : "Ensaio guardado só nesta sessão. Exporte o caderno para preservá-lo.",
   );
+  if (learningTab === "advanced") renderAdvanced();
   if (showChart) renderChart();
 };
 for (const key of ["see", "think", "ask"] as const)
@@ -728,15 +742,105 @@ function renderCalculations() {
     )
     .join("");
 }
+let advancedSignature = "",
+  taskSignature = "",
+  resolution = 0.1;
+function renderAdvanced() {
+  const signature = JSON.stringify([mode, params, resolution]);
+  if (signature !== advancedSignature) {
+    advancedSignature = signature;
+    const a = analysis(mode, params, resolution);
+    $("#advanced-analysis").innerHTML =
+      `<span class="eyebrow">COMPARE • ARGUMENTE • INVESTIGUE</span><h3>${escape(a.title)}</h3><p>${escape(a.intro)}</p><div class="table-scroll"><table><thead><tr>${a.headers.map((h) => `<th scope="col">${escape(h)}</th>`).join("")}</tr></thead><tbody>${a.rows.map((row) => `<tr>${row.map((cell, i) => (i === 0 ? `<th scope="row">${escape(cell)}</th>` : `<td>${escape(cell)}</td>`)).join("")}</tr>`).join("")}</tbody></table></div><p class="analysis-conclusion">${escape(a.conclusion)}</p><p class="extend-question"><strong>TESTE SUA EXPLICAÇÃO</strong>${escape(a.prompt)}</p>`;
+    $("#resolution-tools").hidden = mode !== "identify";
+    $("#phase-jumps").hidden = mode !== "phase";
+    if (mode === "phase") {
+      $("#phase-jumps").innerHTML = phaseStages(params.mass, params.power)
+        .map(
+          (s, i) =>
+            `<button type="button" data-stage="${i}">${escape(s.name)}</button>`,
+        )
+        .join("");
+      document
+        .querySelectorAll<HTMLButtonElement>("[data-stage]")
+        .forEach((button) => {
+          button.onclick = () => {
+            progress = phaseStages(params.mass, params.power)[
+              Number(button.dataset.stage)
+            ].midpoint;
+            running = false;
+            render();
+            $("#apparatus").scrollIntoView({
+              behavior: reduced ? "instant" : "smooth",
+              block: "center",
+            });
+          };
+        });
+    }
+  }
+  const nextTask = JSON.stringify([mode, params]);
+  if (taskSignature !== nextTask) {
+    taskSignature = nextTask;
+    const task = numericChallenge(mode, params);
+    $("#numeric-question").textContent = task.question;
+    $("#numeric-unit").textContent = task.unit;
+    $("#numeric-tolerance").textContent =
+      `Aceitamos diferença de até ${fmt(task.tolerance, 3)} ${task.unit}. Use vírgula ou ponto decimal, sem separador de milhares.`;
+    $<HTMLInputElement>("#numeric-answer").value = "";
+    $("#numeric-feedback").textContent = "";
+    $("#numeric-feedback").classList.remove("answer-correct");
+    $("#numeric-solution").hidden = true;
+    $("#numeric-solution").textContent = task.solution;
+    $("#reveal-solution").setAttribute("aria-expanded", "false");
+    $("#reveal-solution").textContent = "Ver resolução";
+  }
+  $("#numeric-progress").textContent =
+    `${new Set(notebook.numericSolved).size}/${experiments.length} temas resolvidos`;
+}
+$<HTMLSelectElement>("#thermometer-resolution").onchange = (e) => {
+  resolution = Number((e.target as HTMLSelectElement).value);
+  renderAdvanced();
+};
+$<HTMLFormElement>("#numeric-form").onsubmit = (e) => {
+  e.preventDefault();
+  const answer = parseAnswer($<HTMLInputElement>("#numeric-answer").value);
+  const task = numericChallenge(mode, params);
+  const feedback = $("#numeric-feedback");
+  if (answer === null) {
+    feedback.classList.remove("answer-correct");
+    feedback.textContent =
+      "Digite um número válido, sem a unidade. Exemplo: −12,5 (use o sinal de menos do teclado).";
+    return;
+  }
+  const correct = acceptsAnswer(task, answer);
+  feedback.textContent = correct
+    ? `Correto! ${task.solution}`
+    : `Ainda não. ${task.hint} Confira o sinal e as unidades e tente novamente.`;
+  feedback.classList.toggle("answer-correct", correct);
+  if (correct && !notebook.numericSolved.includes(mode)) {
+    notebook.numericSolved.push(mode);
+    persist();
+    renderAdvanced();
+  }
+};
+$("#reveal-solution").onclick = () => {
+  const panel = $("#numeric-solution");
+  panel.hidden = !panel.hidden;
+  $("#reveal-solution").setAttribute("aria-expanded", String(!panel.hidden));
+  $("#reveal-solution").textContent = panel.hidden
+    ? "Ver resolução"
+    : "Ocultar resolução";
+};
 function setLearningTab(tab: LearningTab) {
   learningTab = tab;
-  for (const key of ["protocol", "calculations", "data"] as const) {
+  for (const key of ["protocol", "calculations", "data", "advanced"] as const) {
     $(`#panel-${key}`).hidden = key !== tab;
     $(`#tab-${key}`).setAttribute("aria-selected", String(key === tab));
     $(`#tab-${key}`).setAttribute("tabindex", key === tab ? "0" : "-1");
   }
   if (tab === "calculations") renderCalculations();
   if (tab === "data") renderData();
+  if (tab === "advanced") renderAdvanced();
 }
 function renderGuided() {
   $("#guided-strip").hidden = !guided;
@@ -877,17 +981,17 @@ $("#guided-next").onclick = () => {
     if (guidedStep === 2) setLearningTab("calculations");
   }
 };
-const tabs = ["protocol", "calculations", "data"] as const;
+const tabs = ["protocol", "calculations", "data", "advanced"] as const;
 for (const tab of tabs) {
   const button = $<HTMLButtonElement>(`#tab-${tab}`);
   button.onclick = () => setLearningTab(tab);
   button.onkeydown = (e) => {
     let target: number | undefined;
     const i = tabs.indexOf(tab);
-    if (e.key === "ArrowRight") target = (i + 1) % 3;
-    if (e.key === "ArrowLeft") target = (i + 2) % 3;
+    if (e.key === "ArrowRight") target = (i + 1) % tabs.length;
+    if (e.key === "ArrowLeft") target = (i + tabs.length - 1) % tabs.length;
     if (e.key === "Home") target = 0;
-    if (e.key === "End") target = 2;
+    if (e.key === "End") target = tabs.length - 1;
     if (target !== undefined) {
       e.preventDefault();
       setLearningTab(tabs[target]);

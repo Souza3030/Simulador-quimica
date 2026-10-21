@@ -1,4 +1,4 @@
-# TermoLab 3.0 · A descoberta está nas suas mãos
+# TermoLab 3.1 · A descoberta está nas suas mãos
 
 Um laboratório de investigação em **TypeScript estrito + Vite**, em português. Onze experiências conectam os assuntos do capítulo 14 de termoquímica: de sistemas e fronteiras à energia livre de Gibbs, com investigações de Lei de Hess e identificação calorimétrica de metais. A interface usa azul e laranja e a logo do Senac fornecida como referência.
 
@@ -20,6 +20,26 @@ Um laboratório de investigação em **TypeScript estrito + Vite**, em portuguê
 - **Comparação:** os dois últimos ensaios do assunto atual aparecem lado a lado no caderno. No gráfico, uma curva tracejada mostra o último ensaio guardado; processos com eixos incompatíveis não são sobrepostos.
 - **Onze hipóteses:** perguntas com feedback explicativo e progresso salvo.
 - Layout adaptado a celular, navegação por teclado, ajuda, descrição dos modelos e opção de reduzir movimento.
+
+## Investigação avançada · novidade da versão 3.1
+
+A quarta aba de cada experiência traz uma comparação quantitativa que acompanha os controles da bancada:
+
+- **Sistemas:** constante de tempo, meia diferença de temperatura e potência inicial de troca.
+- **Mudanças de estado:** energia e tempo de cada etapa, com atalhos para observar seus pontos intermediários.
+- **Calor e temperatura:** capacidades térmicas e aquecimento de água, cobre e alumínio com a mesma energia.
+- **Calorimetria:** diferença entre considerar e ignorar o recipiente no equilíbrio.
+- **Processos:** tabela dos quatro processos com temperatura, pressão, calor, trabalho e energia interna.
+- **Primeira lei:** diferentes pares de calor e trabalho para uma mesma variação de energia interna.
+- **Segunda lei:** entropia de cada reservatório e trabalho perdido em relação ao limite reversível.
+- **Entalpia:** quantidades estequiométricas, calor da reação e calor recebido pelo banho.
+- **Gibbs:** entropia do sistema, da vizinhança e do universo; temperatura de inversão quando existe.
+- **Metais:** resolução selecionável de 0,01 a 2 °C, faixa de calor específico e metais compatíveis com a leitura.
+- **Hess:** soma das etapas e cancelamento do intermediário, incluindo reação inversa.
+
+Cada tema tem um **desafio numérico** gerado com os parâmetros atuais: aceita vírgula ou ponto decimal, explica erros, informa a tolerância e oferece resolução sob demanda. O progresso dos onze temas fica salvo no navegador. As análises avançadas são previsões para o estado final; os cálculos ao vivo continuam mostrando o instante da animação. Os roteiros orientam hipóteses e comparação com a observação.
+
+![Investigação da resolução do termômetro e identificação de metais](docs/investigacao.png)
 
 ## Experiências do capítulo
 
@@ -58,7 +78,7 @@ npm ci
 npm start
 ```
 
-A versão nova mostra **TermoLab 3.0** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
+A versão nova mostra **TermoLab 3.1** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
 
 Para gerar os arquivos do site:
 
@@ -71,7 +91,7 @@ O resultado fica em `dist/`. O projeto usa apenas arquivos locais: não exige ba
 ## Verificar
 
 ```sh
-npm test             # 20 testes científicos, instrumentos e casos de fronteira
+npm test             # 25 testes científicos, instrumentos e casos de fronteira
 npm run check        # TypeScript estrito
 npm run build        # checagem de tipos + compilação
 npm run test:browser # servidor na porta 5173 deve estar ativo
@@ -79,13 +99,14 @@ npm run test:browser # servidor na porta 5173 deve estar ativo
 
 O teste de interface usa Chromium em `/usr/bin/chromium`. Para outro sistema, configure `CHROMIUM_PATH` com o caminho de um Chromium/Chrome instalado. `TERMOLAB_URL` altera o endereço do servidor de teste.
 
-O teste de navegador cobre os onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, comparação, restauração, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
+O teste de navegador cobre os onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, comparação, restauração, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV, onze desafios numéricos, resolução do termômetro, atalhos das fases e a nova aba em celular. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
 
 ## Organização
 
 - `physics.ts`: funções puras, unidades e modelos físicos.
 - `experiments.ts`: currículo, controles, configurações, perguntas e medições.
 - `lessons.ts`: objetivos, roteiros, interpretação e cálculos numéricos dos 11 experimentos.
+- `investigation.ts`: análises comparativas, desafios numéricos e propagação da resolução do termômetro.
 - `instruments.ts`: zonas de amostra e leitura física da sonda.
 - `scene.ts`: desenho dos aparatos e partículas em Canvas.
 - `app.ts`: reprodução, gráficos SVG, caderno e persistência.
@@ -105,7 +126,7 @@ A opção **Sobre este modelo** descreve as condições de cada experiência. Os
 - Gibbs: transformação hipotética a T e p constantes, ΔH e ΔS independentes da temperatura. ΔS em J/(mol·K) é convertido para kJ antes do balanço. Favorabilidade não determina velocidade.
 
 - Termômetro: instrumento ideal, sem atraso e sem capacidade térmica. A temperatura é a da amostra sob a ponta; a sonda não altera o balanço. As duas câmaras de calorimetria representam as parcelas de uma mistura ideal.
-- Amostra desconhecida: água, recipiente e metal formam conjunto isolado. O cálculo usa a temperatura de equilíbrio sem arredondamento; a interface mostra valores arredondados. Não inclui incerteza experimental.
+- Amostra desconhecida: água, recipiente e metal formam conjunto isolado. O cálculo usa a temperatura de equilíbrio sem arredondamento; a interface mostra valores arredondados. A aba Investigação avançada permite arredondar a leitura de equilíbrio e propagar a faixa de ± meia resolução para o calor específico. Essa faixa considera somente a quantização de Tf; não é intervalo de confiança nem inclui perdas, calibração ou incerteza das demais grandezas.
 - Hess: C(grafite) → CO → CO₂, com etapas −110,5 e −283,0 kJ/mol; total −393,5 kJ/mol. O percurso é uma coordenada didática, não tempo ou cinética. Inverter a reação inverte também a ordem e o sinal das etapas.
 
 ## Identidade visual

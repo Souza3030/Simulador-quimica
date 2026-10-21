@@ -275,7 +275,15 @@
                 data-learning="data"
                 tabindex="-1"
               >
-                03 <span>Tabela de dados</span>
+                03 <span>Tabela de dados</span></button
+              ><button
+                id="tab-advanced"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-advanced"
+                tabindex="-1"
+              >
+                04 <span>Investigação avançada</span>
               </button>
             </div>
             <div
@@ -314,6 +322,63 @@
               </div>
               <div id="data-table"></div>
             </div>
+            <div
+              id="panel-advanced"
+              role="tabpanel"
+              aria-labelledby="tab-advanced"
+              hidden
+            >
+              <div id="resolution-tools" hidden>
+                <label for="thermometer-resolution"
+                  >Resolução do termômetro no equilíbrio</label
+                ><select id="thermometer-resolution">
+                  <option value="0.01">0,01 °C</option>
+                  <option value="0.1" selected>0,1 °C</option>
+                  <option value="0.5">0,5 °C</option>
+                  <option value="1">1 °C</option>
+                  <option value="2">2 °C</option>
+                </select>
+              </div>
+              <div id="advanced-analysis"></div>
+              <div
+                id="phase-jumps"
+                class="phase-jumps"
+                aria-label="Observar etapas da mudança de estado"
+                hidden
+              ></div>
+              <article class="numeric-card">
+                <div class="challenge-top">
+                  <span class="eyebrow">PREVEJA COM NÚMEROS</span
+                  ><span id="numeric-progress"></span>
+                </div>
+                <h3 id="numeric-question"></h3>
+                <form id="numeric-form" novalidate>
+                  <label for="numeric-answer">Sua previsão</label>
+                  <div class="numeric-input-row">
+                    <input
+                      id="numeric-answer"
+                      type="text"
+                      inputmode="decimal"
+                      autocomplete="off"
+                      maxlength="30"
+                      aria-describedby="numeric-unit numeric-tolerance"
+                    /><span id="numeric-unit"></span
+                    ><button type="submit">Conferir resposta</button>
+                  </div>
+                  <p id="numeric-tolerance"></p>
+                </form>
+                <p id="numeric-feedback" role="status"></p>
+                <button
+                  id="reveal-solution"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="numeric-solution"
+                >
+                  Ver resolução
+                </button>
+                <p id="numeric-solution" hidden></p>
+              </article>
+            </div>
           </section>
           <section class="discovery-grid">
             <article class="insight-card">
@@ -347,7 +412,7 @@
           </section>
           <footer>
             <span>Feito para quem pergunta <b>por quê.</b></span
-            ><span>TermoLab 3.0 · Projeto educacional · Ensino médio</span>
+            ><span>TermoLab 3.1 · Projeto educacional · Ensino médio</span>
           </footer>
         </main>
       </div>

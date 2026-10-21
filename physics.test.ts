@@ -222,3 +222,115 @@ test("each experiment has a complete protocol and finite worked calculations at 
     /Aguarde/,
   );
 });
+
+import {
+  analysis,
+  numericChallenge,
+  acceptsAnswer,
+  parseAnswer,
+  metalUncertainty,
+  phaseStages,
+} from "./investigation.ts";
+test("numeric input accepts signed decimal comma and rejects ambiguous or non-finite input", () => {
+  assert.equal(parseAnswer(" -12,5 "), -12.5);
+  assert.equal(parseAnswer(".385"), 0.385);
+  for (const input of [
+    "",
+    " ",
+    "NaN",
+    "Infinity",
+    "1.000,5",
+    "12 kg",
+    "0x10",
+    "--2",
+  ])
+    assert.equal(parseAnswer(input), null);
+  const task = numericChallenge("first", { q: 40, w: -15 });
+  assert.equal(task.answer, 25);
+  assert.ok(acceptsAnswer(task, 25.04));
+  assert.ok(!acceptsAnswer(task, 25.06));
+  assert.ok(!acceptsAnswer(task, NaN));
+});
+test("numerical investigations have valid answers and content across presets and control extremes", () => {
+  for (const e of experiments) {
+    const configurations = [
+      e.defaults,
+      ...e.presets.map((s) => ({ ...e.defaults, ...s.values })),
+      ...e.controls.flatMap((c) =>
+        [c.min, c.max].map((value) => ({ ...e.defaults, [c.key]: value })),
+      ),
+    ];
+    for (const p of configurations) {
+      const task = numericChallenge(e.id, p);
+      assert.ok(Number.isFinite(task.answer), `${e.id} ${JSON.stringify(p)}`);
+      assert.ok(acceptsAnswer(task, task.answer));
+      const report = analysis(e.id, p);
+      assert.ok(report.rows.length >= 3);
+      assert.ok(
+        report.rows.every((row) => row.length === report.headers.length),
+      );
+      assert.doesNotMatch(JSON.stringify(report), /NaN|Infinity|undefined/);
+    }
+  }
+  near(numericChallenge("phase", { mass: 100 }).answer, 37.6);
+  near(
+    numericChallenge("gibbs", { dh: 40, ds: 100, temperature: 300 }).answer,
+    10,
+  );
+  near(
+    numericChallenge("enthalpy", { reaction: 0, amount: 0.02, water: 250 })
+      .answer,
+    17.806,
+  );
+});
+test("temperature quantization bounds contain true specific heat across samples and resolutions", () => {
+  const base = experiments.find((e) => e.id === "identify")!.defaults;
+  for (let sample = 0; sample < 3; sample++)
+    for (const resolution of [0.01, 0.1, 0.5, 1, 2])
+      for (const metalMass of [10, 50, 150, 400]) {
+        const u = metalUncertainty({ ...base, sample, metalMass }, resolution);
+        assert.ok(u.low <= unknownMetals[sample].c + 1e-10);
+        assert.ok(u.high === null || u.high >= unknownMetals[sample].c - 1e-10);
+        assert.ok(u.candidates.includes(unknownMetals[sample].name));
+        assert.doesNotMatch(JSON.stringify(u), /NaN|Infinity/);
+      }
+  const coarse = metalUncertainty(base, 2),
+    fine = metalUncertainty(base, 0.01);
+  assert.ok(coarse.candidates.length > 1);
+  assert.deepEqual(fine.candidates, ["Cobre"]);
+  assert.ok(fine.high! - fine.low < coarse.high! - coarse.low);
+  assert.throws(() => metalUncertainty(base, 0), RangeError);
+  const unreadable = metalUncertainty({ ...base, metalMass: 0.01 }, 2);
+  assert.equal(unreadable.estimate, null);
+  assert.equal(unreadable.low, 0);
+});
+test("phase exploration budgets sum to full heat and each shortcut lands inside its phase", () => {
+  const stages = phaseStages(100, 1500);
+  near(
+    stages.reduce((sum, s) => sum + s.energy, 0),
+    309,
+  );
+  near(
+    stages.reduce((sum, s) => sum + s.seconds, 0),
+    206,
+  );
+  assert.deepEqual(
+    stages.map((s) => waterState(100, 309 * s.midpoint).phase),
+    ["Sólido", "Fusão", "Líquido", "Ebulição", "Gasoso"],
+  );
+  const doubled = phaseStages(100, 3000);
+  stages.forEach((s, i) => {
+    near(doubled[i].energy, s.energy);
+    near(doubled[i].seconds, s.seconds / 2);
+  });
+});
+test("lost work matches entropy generation for fixed reservoirs and Gibbs matches universe entropy", () => {
+  for (const quality of [0, 0.25, 0.7, 1]) {
+    const e = heatEngine(600, 300, quality, 10);
+    near(10 * e.carnot - e.work, (300 * e.entropy) / 1000);
+  }
+  for (const dh of [-40, 0, 40])
+    for (const ds of [-100, 0, 100])
+      for (const T of [250, 400, 900])
+        near(ds - (1000 * dh) / T, (-1000 * gibbs(dh, ds, T)) / T);
+});
