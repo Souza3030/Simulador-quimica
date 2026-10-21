@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#004b80" />
+    <title>Administração | TermoLab</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/pages.css" />
+  </head>
+  <body class="route-body">
+    <a class="skip" href="#main">Pular para o painel</a>
+    <header class="route-header">
+      <a href="/" class="route-brand"
+        ><img src="/senac.png" alt="Senac" /><span
+          >TermoLab<small>ADMINISTRAÇÃO</small></span
+        ></a
+      >
+      <nav>
+        <a href="/" target="_blank" rel="noopener">Bancada ↗</a
+        ><a href="/caderno.html" target="_blank" rel="noopener"
+          >Meu caderno ↗</a
+        >
+      </nav>
+    </header>
+    <main id="main" class="route-main">
+      <div class="route-heading">
+        <span class="eyebrow">GESTÃO DO LABORATÓRIO</span>
+        <h1>Visão dos cadernos.</h1>
+        <p>
+          Acompanhe registros, ensaios e progresso das contas com acesso
+          protegido pelas regras do Firestore.
+        </p>
+      </div>
+      <section class="route-card account-card">
+        <div>
+          <span class="eyebrow">ACESSO RESTRITO</span>
+          <h2 id="admin-account">Entrar como administrador</h2>
+          <p id="admin-status" role="status">
+            Entre com Google ou e-mail e senha para verificar o acesso.
+          </p>
+          <p id="admin-uid"></p>
+        </div>
+        <div class="route-actions">
+          <button id="admin-login" class="primary-action">
+            Entrar com Google</button
+          ><button id="admin-logout" class="secondary-action" hidden>
+            Sair
+          </button>
+        </div>
+      </section>
+      <section
+        id="email-login-section"
+        class="route-card"
+        aria-label="Acesso com e-mail e senha"
+      >
+        <div class="card-head">
+          <span class="eyebrow">OUTRA FORMA DE ENTRAR</span>
+          <h2>E-mail e senha</h2>
+          <p>
+            A senha é usada apenas pelo Firebase Authentication durante o login.
+          </p>
+        </div>
+        <form id="admin-email-form" class="email-form">
+          <label for="admin-email">E-mail</label
+          ><input
+            id="admin-email"
+            type="email"
+            autocomplete="username"
+            required
+          />
+          <label for="admin-password">Senha</label
+          ><input
+            id="admin-password"
+            type="password"
+            autocomplete="current-password"
+            required
+            minlength="6"
+          />
+          <div class="route-actions">
+            <button type="submit" class="primary-action">
+              Entrar com e-mail</button
+            ><button
+              id="admin-create-account"
+              type="button"
+              class="secondary-action"
+            >
+              Criar conta
+            </button>
+          </div>
+        </form>
+        <button id="admin-verify-email" class="secondary-action" hidden>
+          Enviar e-mail de verificação
+        </button>
+        <button id="admin-check-email" class="secondary-action" hidden>
+          Já verifiquei meu e-mail
+        </button>
+      </section>
+      <div id="dashboard" hidden>
+        <div
+          id="admin-stats"
+          class="admin-stat-grid"
+          aria-label="Resumo dos cadernos"
+        ></div>
+        <section class="route-card">
+          <div class="card-head">
+            <span class="eyebrow">REGISTROS NO FIRESTORE</span>
+            <h2>Cadernos por usuário</h2>
+            <label for="admin-search">Pesquisar por e-mail ou UID</label
+            ><input
+              id="admin-search"
+              class="route-search"
+              type="search"
+              placeholder="Digite para filtrar"
+            /><button id="admin-refresh" class="secondary-action">
+              Atualizar dados
+            </button>
+          </div>
+          <div id="admin-list"></div>
+        </section>
+        <section
+          id="admin-detail"
+          class="route-card admin-detail"
+          hidden
+        ></section>
+      </div>
+      <p class="route-footnote">
+        A lista apresenta somente cadernos que seus proprietários sincronizaram
+        com o Firestore. Dados locais de outros navegadores não aparecem aqui.
+      </p>
+    </main>
+    <script type="module" src="/admin.ts"></script>
+  </body>
+</html>

@@ -46,7 +46,13 @@
           <div>
             <button id="motion" class="quiet" aria-pressed="false">
               Reduzir movimento</button
-            ><button id="open-notebook" class="notebook-button"></button>
+            ><a
+              id="open-notebook"
+              class="notebook-button"
+              href="/caderno.html"
+              target="_blank"
+              rel="noopener"
+            ></a>
           </div>
         </header>
         <main id="main">
@@ -408,62 +414,21 @@
                 descobrir?
               </p>
             </div>
-            <button id="write-note">Abrir meu caderno <span>↗</span></button>
+            <a
+              id="write-note"
+              href="/caderno.html"
+              target="_blank"
+              rel="noopener"
+              >Abrir meu caderno <span>↗</span></a
+            >
           </section>
           <footer>
             <span>Feito para quem pergunta <b>por quê.</b></span
-            ><span>TermoLab 3.1 · Projeto educacional · Ensino médio</span>
+            ><span>TermoLab 4.0 · Projeto educacional · Ensino médio</span>
           </footer>
         </main>
       </div>
     </div>
-    <dialog id="notebook">
-      <div class="dialog-header">
-        <div>
-          <span class="eyebrow">SEU CADERNO DE CIENTISTA</span>
-          <h2>Pequenas pistas. Grandes conexões.</h2>
-        </div>
-        <button
-          data-close="notebook"
-          aria-label="Fechar caderno"
-          class="icon-button"
-        >
-          ×
-        </button>
-      </div>
-      <p class="dialog-intro">
-        Anotações e ensaios ficam salvos neste navegador. Exporte uma cópia para
-        levar com você.
-      </p>
-      <div class="notes">
-        <label
-          >01 / VER<textarea
-            id="note-see"
-            placeholder="O que você observou?"
-            maxlength="3000"
-          ></textarea></label
-        ><label
-          >02 / PENSAR<textarea
-            id="note-think"
-            placeholder="Qual é a sua explicação?"
-            maxlength="3000"
-          ></textarea></label
-        ><label
-          >03 / PERGUNTAR<textarea
-            id="note-ask"
-            placeholder="O que você investigaria agora?"
-            maxlength="3000"
-          ></textarea>
-        </label>
-      </div>
-      <div class="saved-heading">
-        <h3>Ensaios guardados</h3>
-        <button id="export" class="quiet"></button>
-      </div>
-      <div id="saved-runs"></div>
-      <div id="comparison"></div>
-      <p id="storage-status" role="status"></p>
-    </dialog>
     <dialog id="guide">
       <div class="dialog-header">
         <h2 id="guide-title"></h2>

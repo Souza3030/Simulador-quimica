@@ -273,6 +273,10 @@ textarea:focus-visible {
   padding: 5px 0;
 }
 .notebook-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
   background: #fff6e8;
   border: 1px solid #f6dfbe;
   border-radius: 7px;
@@ -1387,13 +1391,14 @@ td {
   color: #8fa4b5;
   margin: 0;
 }
-.notebook-teaser button {
+.notebook-teaser a {
+  text-decoration: none;
   font-size: 11px;
   white-space: nowrap;
   color: #5888ad;
   margin-left: auto;
 }
-.notebook-teaser button svg {
+.notebook-teaser a svg {
   width: 15px;
   height: 15px;
   transform: rotate(-35deg);
@@ -1866,7 +1871,8 @@ dialog::backdrop {
   .notebook-teaser {
     flex-wrap: wrap;
   }
-  .notebook-teaser button {
+  .notebook-teaser a {
+    text-decoration: none;
     margin-left: 54px;
   }
   .stage-id {
@@ -1961,6 +1967,10 @@ dialog::backdrop {
     font-size: 10px;
   }
   .notebook-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
     font-size: 10px;
     padding: 8px 10px;
   }
@@ -2280,7 +2290,8 @@ dialog::backdrop {
     font-size: 10px;
     line-height: 1.8;
   }
-  .notebook-teaser button {
+  .notebook-teaser a {
+    text-decoration: none;
     flex-basis: 100%;
     justify-content: start;
     margin: 2px 0 0;

@@ -1,4 +1,4 @@
-# TermoLab 3.1 · A descoberta está nas suas mãos
+# TermoLab 4.0 · A descoberta está nas suas mãos
 
 Um laboratório de investigação em **TypeScript estrito + Vite**, em português. Onze experiências conectam os assuntos do capítulo 14 de termoquímica: de sistemas e fronteiras à energia livre de Gibbs, com investigações de Lei de Hess e identificação calorimétrica de metais. A interface usa azul e laranja e a logo do Senac fornecida como referência.
 
@@ -16,12 +16,12 @@ Um laboratório de investigação em **TypeScript estrito + Vite**, em portuguê
 - **Bancada e gráfico:** duas representações do mesmo estado, com partículas, recipientes, pistão, máquina térmica e balanços de energia.
 - **Linha do tempo reversível:** pause, avance ou retorne a qualquer ponto da experiência. Mudar um parâmetro reinicia a evolução.
 - **22 ideias prontas:** configurações para investigar contrastes, como um copo aberto e uma garrafa ideal, ou uma máquina real e o limite reversível.
-- **Caderno Ver–Pensar–Perguntar:** anotações, até 12 ensaios, retomada de configurações e exportação em JSON. Armazenamento local no navegador, sem conta.
+- **Caderno Ver–Pensar–Perguntar:** anotações, até 12 ensaios, retomada de configurações e exportação em JSON. Abre em `/caderno.html` em uma nova aba. Os registros locais antigos são preservados; com login, também são sincronizados no Firestore.
 - **Comparação:** os dois últimos ensaios do assunto atual aparecem lado a lado no caderno. No gráfico, uma curva tracejada mostra o último ensaio guardado; processos com eixos incompatíveis não são sobrepostos.
 - **Onze hipóteses:** perguntas com feedback explicativo e progresso salvo.
 - Layout adaptado a celular, navegação por teclado, ajuda, descrição dos modelos e opção de reduzir movimento.
 
-## Investigação avançada · novidade da versão 3.1
+## Investigação avançada
 
 A quarta aba de cada experiência traz uma comparação quantitativa que acompanha os controles da bancada:
 
@@ -40,6 +40,15 @@ A quarta aba de cada experiência traz uma comparação quantitativa que acompan
 Cada tema tem um **desafio numérico** gerado com os parâmetros atuais: aceita vírgula ou ponto decimal, explica erros, informa a tolerância e oferece resolução sob demanda. O progresso dos onze temas fica salvo no navegador. As análises avançadas são previsões para o estado final; os cálculos ao vivo continuam mostrando o instante da animação. Os roteiros orientam hipóteses e comparação com a observação.
 
 ![Investigação da resolução do termômetro e identificação de metais](docs/investigacao.png)
+
+## Caderno e administração · versão 4.0
+
+- **Caderno em nova rota:** o botão abre `/caderno.html` com `target="_blank"`; a bancada permanece aberta. O caderno mostra anotações, ensaios, comparação e leituras. “Retomar” envia um ensaio à bancada aberta.
+- **Firestore:** a cópia local continua disponível sem conexão. Após login, o caderno sincroniza com o documento privado `notebooks/{uid}`. O projeto usa a configuração Firebase fornecida e regras de acesso por usuário.
+- **Painel `/admin.html`:** acesso pelo e-mail administrador verificado com Google ou e-mail e senha no próprio formulário. Mostra total de cadernos, ensaios, leituras, busca por conta, progresso, notas e exportação individual. Senhas não entram no repositório.
+- **Ativação:** o Console do Firebase precisa ter Firestore `(default)` e Authentication habilitados. Leia [o guia de ativação](docs/FIREBASE.md) para publicar as regras e, se quiser, hospedar as páginas.
+
+![Caderno independente em outra aba](docs/caderno.png)
 
 ## Experiências do capítulo
 
@@ -78,7 +87,7 @@ npm ci
 npm start
 ```
 
-A versão nova mostra **TermoLab 3.1** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
+A versão nova mostra **TermoLab 4.0** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
 
 Para gerar os arquivos do site:
 
@@ -86,12 +95,12 @@ Para gerar os arquivos do site:
 npm run build
 ```
 
-O resultado fica em `dist/`. O projeto usa apenas arquivos locais: não exige banco, chaves de API, fontes externas ou serviços de IA. O envio do código ao GitHub não publica automaticamente um site.
+O resultado fica em `dist/`. A simulação funciona sem login. Para sincronizar o caderno e liberar o painel administrativo, ative Firestore e Authentication e publique as regras conforme [docs/FIREBASE.md](docs/FIREBASE.md). O envio do código ao GitHub não publica automaticamente um site.
 
 ## Verificar
 
 ```sh
-npm test             # 25 testes científicos, instrumentos e casos de fronteira
+npm test             # 27 testes científicos, instrumentos e casos de fronteira
 npm run check        # TypeScript estrito
 npm run build        # checagem de tipos + compilação
 npm run test:browser # servidor na porta 5173 deve estar ativo
@@ -99,7 +108,7 @@ npm run test:browser # servidor na porta 5173 deve estar ativo
 
 O teste de interface usa Chromium em `/usr/bin/chromium`. Para outro sistema, configure `CHROMIUM_PATH` com o caminho de um Chromium/Chrome instalado. `TERMOLAB_URL` altera o endereço do servidor de teste.
 
-O teste de navegador cobre os onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, comparação, restauração, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV, onze desafios numéricos, resolução do termômetro, atalhos das fases e a nova aba em celular. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
+O teste de navegador cobre a abertura do caderno em outra aba, a preservação da bancada, comparação e restauração de ensaios, além dos onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV, onze desafios numéricos, resolução do termômetro, atalhos das fases e a nova aba em celular. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
 
 ## Organização
 
@@ -109,7 +118,10 @@ O teste de navegador cobre os onze assuntos, 22 presets, onze gráficos, hipóte
 - `investigation.ts`: análises comparativas, desafios numéricos e propagação da resolução do termômetro.
 - `instruments.ts`: zonas de amostra e leitura física da sonda.
 - `scene.ts`: desenho dos aparatos e partículas em Canvas.
-- `app.ts`: reprodução, gráficos SVG, caderno e persistência.
+- `app.ts`: reprodução, gráficos SVG e persistência da bancada.
+- `caderno.ts`, `admin.ts`: página independente do caderno e painel administrativo.
+- `notebook-data.ts`, `firebase.ts`: migração local, autenticação e dados no Firestore.
+- `firestore.rules`, `firebase.json`: regras de segurança e rotas de hospedagem.
 - `icons.ts`, `style.css`, `index.html`: identidade visual e interface.
 - `physics.test.ts`, `tests/browser.ts`: validação científica e funcional.
 

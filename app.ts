@@ -1,4 +1,8 @@
 import { experiments, evaluate, getExperiment } from "./experiments.ts";
+import { isMode, loadNotebook, saveNotebook } from "./notebook-data.ts";
+import type { Snapshot } from "./notebook-data.ts";
+import { auth, getCloudNotebook, putCloudNotebook } from "./firebase.ts";
+import { onAuthStateChanged } from "firebase/auth";
 import type { Mode, Params, Result } from "./experiments.ts";
 import { gibbs } from "./physics.ts";
 import { icon } from "./icons.ts";
@@ -31,94 +35,7 @@ const escape = (value: string) =>
         c
       ]!,
   );
-const isMode = (id: unknown): id is Mode =>
-  typeof id === "string" && experiments.some((e) => e.id === id);
-const storageKey = "termolab-investigacoes-v2";
-interface Snapshot {
-  id: string;
-  mode: Mode;
-  params: Params;
-  progress: number;
-  date: string;
-}
-interface Notebook {
-  notes: { see: string; think: string; ask: string };
-  snapshots: Snapshot[];
-  measurements: Snapshot[];
-  solved: Mode[];
-  numericSolved: Mode[];
-  visited: Mode[];
-  selected: Mode;
-}
-const emptyNotebook = (): Notebook => ({
-  notes: { see: "", think: "", ask: "" },
-  snapshots: [],
-  measurements: [],
-  solved: [],
-  numericSolved: [],
-  visited: [],
-  selected: "mix",
-});
-function validParams(mode: Mode, data: unknown): data is Params {
-  if (!data || typeof data !== "object") return false;
-  const values = data as Params;
-  return getExperiment(mode).controls.every(
-    (c) =>
-      Number.isFinite(values[c.key]) &&
-      values[c.key] >= c.min &&
-      values[c.key] <= c.max &&
-      (!c.options || Number.isInteger(values[c.key])),
-  );
-}
-function load(): Notebook {
-  try {
-    const raw = JSON.parse(localStorage.getItem(storageKey) || "null");
-    if (!raw) return emptyNotebook();
-    const out = emptyNotebook();
-    for (const key of ["see", "think", "ask"] as const)
-      if (typeof raw.notes?.[key] === "string")
-        out.notes[key] = raw.notes[key].slice(0, 3000);
-    if (Array.isArray(raw.solved)) out.solved = raw.solved.filter(isMode);
-    if (Array.isArray(raw.numericSolved))
-      out.numericSolved = raw.numericSolved.filter(isMode);
-    if (Array.isArray(raw.visited)) out.visited = raw.visited.filter(isMode);
-    if (isMode(raw.selected)) out.selected = raw.selected;
-    if (Array.isArray(raw.snapshots))
-      out.snapshots = raw.snapshots
-        .filter(
-          (s: Snapshot) =>
-            s &&
-            typeof s.id === "string" &&
-            s.id.length < 100 &&
-            isMode(s.mode) &&
-            validParams(s.mode, s.params) &&
-            Number.isFinite(s.progress) &&
-            s.progress >= 0 &&
-            s.progress <= 1 &&
-            typeof s.date === "string",
-        )
-        .slice(-12);
-    if (Array.isArray(raw.measurements))
-      out.measurements = raw.measurements
-        .filter(
-          (v: Snapshot) =>
-            v &&
-            typeof v.id === "string" &&
-            v.id.length < 100 &&
-            isMode(v.mode) &&
-            validParams(v.mode, v.params) &&
-            Number.isFinite(v.progress) &&
-            v.progress >= 0 &&
-            v.progress <= 1 &&
-            typeof v.date === "string",
-        )
-        .slice(-60);
-    return out;
-  } catch {
-    return emptyNotebook();
-  }
-}
-let notebook = load(),
+let notebook = loadNotebook(),
   mode: Mode = notebook.selected,
   params: Params = { ...getExperiment(mode).defaults },
   progress = 0,
@@ -147,17 +64,65 @@ function toast(message: string) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $("#toast").classList.remove("visible"), 3500);
 }
-function persist() {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(notebook));
-    $("#storage-status").textContent = "Salvo neste navegador.";
-    return true;
-  } catch {
-    $("#storage-status").textContent =
-      "O navegador bloqueou o armazenamento. Exporte o caderno para guardar seus dados.";
-    return false;
-  }
+let cloudReady = false,
+  cloudTimer: ReturnType<typeof setTimeout> | undefined;
+function queueCloudSave() {
+  if (!cloudReady || !auth.currentUser) return;
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      await putCloudNotebook(user, loadNotebook());
+    } catch (e) {
+      console.warn("Falha ao sincronizar caderno:", e);
+    }
+  }, 700);
 }
+function persist() {
+  const saved = saveNotebook(notebook);
+  queueCloudSave();
+  return saved;
+}
+onAuthStateChanged(auth, async (user) => {
+  cloudReady = false;
+  if (!user) return;
+  try {
+    const remote = await getCloudNotebook(user.uid);
+    const local = loadNotebook();
+    if (remote && remote.updatedAt > local.updatedAt) {
+      try {
+        localStorage.setItem(
+          "termolab-investigacoes-v2-backup",
+          JSON.stringify(local),
+        );
+      } catch {
+        /* storage unavailable */
+      }
+      notebook = remote;
+      localStorage.setItem("termolab-investigacoes-v2", JSON.stringify(remote));
+      updateNotebookCount();
+      nav();
+      challenge();
+      renderData();
+      if (learningTab === "advanced") renderAdvanced();
+    } else if (!remote || local.updatedAt > remote.updatedAt)
+      await putCloudNotebook(user, local);
+    cloudReady = true;
+  } catch (e) {
+    console.warn("Sincronização indisponível:", e);
+  }
+});
+window.addEventListener("storage", (event) => {
+  if (event.key === "termolab-investigacoes-v2") {
+    notebook = loadNotebook();
+    updateNotebookCount();
+    nav();
+    challenge();
+    renderData();
+    if (learningTab === "advanced") renderAdvanced();
+  }
+});
 function iconLabel(selector: string, name: string, text: string) {
   $(selector).innerHTML = icon(name) + text;
 }
@@ -167,7 +132,7 @@ iconLabel("#view-bench", "mix", "Bancada");
 iconLabel("#view-chart", "chart", "Gráfico");
 iconLabel("#micro", "eye", "Ver partículas");
 iconLabel("#save-run", "pin", "Guardar este ensaio");
-iconLabel("#export", "download", "Exportar caderno");
+
 $("#reset").innerHTML = icon("reset");
 $("#insight-icon").innerHTML = icon("spark");
 $("#teaser-icon").innerHTML = icon("book");
@@ -505,67 +470,7 @@ function setView(chart: boolean) {
   if (chart) renderChart();
 }
 function showNotebook() {
-  renderNotebook();
-  $<HTMLDialogElement>("#notebook").showModal();
-}
-function renderNotebook() {
-  updateNotebookCount();
-  for (const key of ["see", "think", "ask"] as const)
-    $<HTMLTextAreaElement>(`#note-${key}`).value = notebook.notes[key];
-  $("#saved-runs").innerHTML = notebook.snapshots.length
-    ? notebook.snapshots
-        .map((s, i) => {
-          const e = getExperiment(s.mode),
-            r = evaluate(s.mode, s.params, s.progress);
-          return `<article class="saved-run"><div><strong>Ensaio ${i + 1} · ${e.name} · ${fmt(s.progress * 100, 0)}%</strong><p>${r.metrics.map((m) => `${m.label}: ${fmt(m.value)} ${m.unit}`).join(" · ")}</p></div><button data-restore="${escape(s.id)}">Retomar ${icon("arrow")}</button><button class="delete-run" data-delete="${escape(s.id)}" aria-label="Excluir ensaio ${i + 1}">×</button></article>`;
-        })
-        .join("")
-    : '<p class="empty">O caderno está aberto. Guarde seu primeiro ensaio na bancada.</p>';
-  const selected = notebook.snapshots.filter((s) => s.mode === mode).slice(-2);
-  $("#comparison").innerHTML =
-    selected.length === 2
-      ? `<h3 class="compare-heading">Lado a lado · ${getExperiment(mode).name}</h3><table><thead><tr><th>Variável</th><th>Ensaio A · ${fmt(selected[0].progress * 100, 0)}%</th><th>Ensaio B · ${fmt(selected[1].progress * 100, 0)}%</th></tr></thead><tbody>${getExperiment(
-          mode,
-        )
-          .controls.map(
-            (c) =>
-              `<tr><td>${c.label}</td>${selected.map((s) => `<td>${c.options ? c.options[s.params[c.key]] : `${fmt(s.params[c.key], c.step < 0.01 ? 3 : 1)} ${c.unit}`}</td>`).join("")}</tr>`,
-          )
-          .join("")}${evaluate(mode, selected[0].params, selected[0].progress)
-          .metrics.map(
-            (metric, i) =>
-              `<tr><td>Medição ${i + 1}</td>${selected
-                .map((s) => {
-                  const m = evaluate(mode, s.params, s.progress).metrics[i];
-                  return `<td>${m.label}: ${fmt(m.value)} ${m.unit}</td>`;
-                })
-                .join("")}</tr>`,
-          )
-          .join("")}</tbody></table>`
-      : `<p class="dialog-intro">Para comparar, guarde dois ensaios de “${getExperiment(mode).name}”. O gráfico também mostra a curva do último ensaio guardado.</p>`;
-  document.querySelectorAll<HTMLButtonElement>("[data-restore]").forEach(
-    (b) =>
-      (b.onclick = () => {
-        const s = notebook.snapshots.find((s) => s.id === b.dataset.restore);
-        if (s) {
-          selectExperiment(s.mode, s);
-          $<HTMLDialogElement>("#notebook").close();
-          toast("Configuração e instante do ensaio restaurados.");
-        }
-      }),
-  );
-  document.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(
-    (b) =>
-      (b.onclick = () => {
-        notebook.snapshots = notebook.snapshots.filter(
-          (s) => s.id !== b.dataset.delete,
-        );
-        persist();
-        renderNotebook();
-        if (learningTab === "advanced") renderAdvanced();
-        if (showChart) renderChart();
-      }),
-  );
+  $<HTMLAnchorElement>("#open-notebook").click();
 }
 $("#save-run").onclick = () => {
   if (notebook.snapshots.length >= 12) {
@@ -591,43 +496,25 @@ $("#save-run").onclick = () => {
   if (learningTab === "advanced") renderAdvanced();
   if (showChart) renderChart();
 };
-for (const key of ["see", "think", "ask"] as const)
-  $<HTMLTextAreaElement>(`#note-${key}`).oninput = () => {
-    notebook.notes[key] = $<HTMLTextAreaElement>(`#note-${key}`).value;
-    persist();
-  };
-$("#export").onclick = () => {
-  const content = JSON.stringify(
-    {
-      version: 3,
-      title: "Caderno TermoLab",
-      ...notebook,
-      results: notebook.snapshots.map((s) => ({
-        ...s,
-        result: evaluate(s.mode, s.params, s.progress),
-      })),
-    },
-    null,
-    2,
-  );
-  const url = URL.createObjectURL(
-    new Blob([content], { type: "application/json;charset=utf-8" }),
-  );
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "meu-caderno-termolab.json";
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast("Exportação do caderno solicitada ao navegador.");
+const notebookChannel = new BroadcastChannel("termolab-caderno");
+notebookChannel.onmessage = (event) => {
+  if (event.data?.type === "restore" && event.data.snapshot) {
+    const snapshot = event.data.snapshot as Snapshot;
+    if (
+      isMode(snapshot.mode) &&
+      notebook.snapshots.some((s) => s.id === snapshot.id)
+    ) {
+      selectExperiment(snapshot.mode, snapshot);
+      toast("Ensaio restaurado a partir do caderno.");
+    }
+  }
 };
-$("#open-notebook").onclick = showNotebook;
-$("#write-note").onclick = showNotebook;
-document
-  .querySelectorAll<HTMLButtonElement>("[data-close]")
-  .forEach(
-    (b) =>
-      (b.onclick = () => $<HTMLDialogElement>(`#${b.dataset.close}`).close()),
-  );
+document.querySelectorAll<HTMLButtonElement>("[data-close]").forEach(
+  (button) =>
+    (button.onclick = () => {
+      $<HTMLDialogElement>(`#${button.dataset.close}`).close();
+    }),
+);
 $("#model").onclick = () => {
   $("#guide-title").textContent = `O modelo: ${getExperiment(mode).name}`;
   $("#guide-content").innerHTML =

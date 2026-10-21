@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#004b80" />
+    <title>Meu caderno | TermoLab</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/pages.css" />
+  </head>
+  <body class="route-body">
+    <a class="skip" href="#main">Pular para o caderno</a>
+    <header class="route-header">
+      <a href="/" class="route-brand"
+        ><img src="/senac.png" alt="Senac" /><span
+          >TermoLab<small>MEU CADERNO</small></span
+        ></a
+      >
+      <nav>
+        <a href="/" target="_blank" rel="noopener">Abrir bancada ↗</a
+        ><a href="/admin.html" target="_blank" rel="noopener"
+          >Administração ↗</a
+        >
+      </nav>
+    </header>
+    <main id="main" class="route-main">
+      <div class="route-heading">
+        <span class="eyebrow">CADERNO DE CIENTISTA · CAPÍTULO 14</span>
+        <h1>Observe. Anote. Compare.</h1>
+        <p>
+          Seus registros ficam neste navegador. Entre com Google para
+          sincronizar o caderno no Firestore e abrir em outros dispositivos. O
+          administrador pode visualizar os registros sincronizados.
+        </p>
+      </div>
+      <section
+        class="route-card account-card"
+        aria-label="Conta e sincronização"
+      >
+        <div>
+          <span class="eyebrow">SEUS DADOS</span>
+          <h2 id="account-name">Caderno local</h2>
+          <p id="sync-status" role="status">Carregando caderno…</p>
+        </div>
+        <div class="route-actions">
+          <button id="sign-in" class="primary-action">Entrar com Google</button
+          ><button id="sign-out" class="secondary-action" hidden>
+            Sair da conta</button
+          ><button id="export" class="secondary-action">Exportar JSON</button>
+          <button id="restore-backup" class="secondary-action" hidden>
+            Restaurar cópia local
+          </button>
+        </div>
+      </section>
+      <div class="route-grid">
+        <section class="route-card" aria-labelledby="notes-title">
+          <div class="card-head">
+            <span class="eyebrow">VER · PENSAR · PERGUNTAR</span>
+            <h2 id="notes-title">Minhas anotações</h2>
+          </div>
+          <div class="route-notes">
+            <label for="note-see">01 / O que eu vi?</label
+            ><textarea
+              id="note-see"
+              maxlength="3000"
+              placeholder="Descreva a observação e as medições."
+            ></textarea
+            ><label for="note-think">02 / O que isso me faz pensar?</label
+            ><textarea
+              id="note-think"
+              maxlength="3000"
+              placeholder="Explique com energia, temperatura e matéria."
+            ></textarea
+            ><label for="note-ask">03 / O que eu investigaria agora?</label
+            ><textarea
+              id="note-ask"
+              maxlength="3000"
+              placeholder="Faça uma pergunta que possa ser testada."
+            ></textarea>
+          </div>
+        </section>
+        <section class="route-card" aria-labelledby="runs-title">
+          <div class="card-head">
+            <span class="eyebrow">ATÉ 12 ENSAIOS</span>
+            <h2 id="runs-title">
+              Experimentos guardados <span id="run-count"></span>
+            </h2>
+            <p>
+              Retomar envia o ensaio para uma bancada do TermoLab já aberta.
+              Você pode abrir uma no botão acima.
+            </p>
+          </div>
+          <div id="saved-runs"></div>
+        </section>
+      </div>
+      <section class="route-card" aria-labelledby="compare-title">
+        <div class="card-head">
+          <span class="eyebrow">EXPLORE DIFERENÇAS</span>
+          <h2 id="compare-title">Compare dois ensaios</h2>
+          <label for="compare-mode">Assunto</label
+          ><select id="compare-mode"></select>
+        </div>
+        <div id="comparison"></div>
+      </section>
+      <section class="route-card" aria-labelledby="readings-title">
+        <div class="card-head">
+          <span class="eyebrow">EVIDÊNCIAS</span>
+          <h2 id="readings-title">Leituras registradas</h2>
+          <p>
+            As leituras salvas na bancada aparecem aqui com as condições e os
+            resultados calculados.
+          </p>
+        </div>
+        <div id="readings"></div>
+      </section>
+      <p class="route-footnote">
+        Os dados científicos seguem modelos didáticos. Consulte as hipóteses na
+        bancada.
+      </p>
+    </main>
+    <script type="module" src="/caderno.ts"></script>
+  </body>
+</html>

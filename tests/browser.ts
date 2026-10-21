@@ -48,34 +48,39 @@ try {
   await expect(page.locator("#progress")).toHaveValue("0");
   await page.locator("#progress").fill("1000");
   await page.locator("#save-run").click();
+  const notebookOpening = page.context().waitForEvent("page");
   await page.locator("#open-notebook").click();
-  await expect(page.locator("#comparison table")).toBeVisible();
-  await expect(page.locator(".saved-run")).toHaveCount(2);
-  await page
+  const notebookPage = await notebookOpening;
+  await notebookPage.waitForLoadState();
+  assert.match(notebookPage.url(), /caderno\.html/);
+  assert.equal(new URL(page.url()).pathname, "/");
+  await expect(notebookPage.locator("#saved-runs .saved-run")).toHaveCount(2);
+  await expect(notebookPage.locator("#comparison table")).toBeVisible();
+  await notebookPage
     .locator("#note-see")
     .fill("A amostra quente cede energia. <b>Teste de texto</b>");
-  await page.locator("#note-think").fill("O copo também absorve calor.");
-  await page.locator("#note-ask").fill("E se eu dobrar a massa fria?");
-  const downloadPromise = page.waitForEvent("download");
-  await page.locator("#export").click();
+  await notebookPage
+    .locator("#note-think")
+    .fill("O copo também absorve calor.");
+  await notebookPage.locator("#note-ask").fill("E se eu dobrar a massa fria?");
+  const downloadPromise = notebookPage.waitForEvent("download");
+  await notebookPage.locator("#export").click();
   const download = await downloadPromise;
   const path = await download.path();
   assert.ok(path);
   const exported = JSON.parse(await readFile(path, "utf8"));
   assert.equal(exported.snapshots.length, 2);
   assert.match(exported.notes.ask, /dobrar/);
-  await page.locator("[data-restore]").first().click();
+  await notebookPage.locator("[data-restore]").first().click();
   await expect(page.locator("#param-capacity")).toHaveValue("0");
   await expect(page.locator("#progress")).toHaveValue("1000");
-  await page.reload();
-  await page.locator("#open-notebook").click();
-  await expect(page.locator("#note-see")).toHaveValue(
+  await notebookPage.reload();
+  await expect(notebookPage.locator("#note-see")).toHaveValue(
     "A amostra quente cede energia. <b>Teste de texto</b>",
   );
-  await expect(page.locator(".saved-run")).toHaveCount(2);
-  await page
-    .getByRole("button", { name: "Fechar caderno", exact: true })
-    .click();
+  await expect(notebookPage.locator(".saved-run")).toHaveCount(2);
+  await notebookPage.close();
+  await page.reload();
   // Every chapter topic, every preset, every graph, every question.
   for (const e of experiments) {
     await page.locator(`[data-mode="${e.id}"]`).click();
@@ -215,11 +220,12 @@ try {
     "0,0000 kJ",
   );
   await toolsPage.locator("#guided-next").click();
+  const guidedOpening = toolsPage.context().waitForEvent("page");
   await toolsPage.locator("#guided-next").click();
-  await expect(toolsPage.locator("#notebook")).toBeVisible();
-  await toolsPage
-    .getByRole("button", { name: "Fechar caderno", exact: true })
-    .click();
+  const guidedNotebook = await guidedOpening;
+  await guidedNotebook.waitForLoadState();
+  assert.match(guidedNotebook.url(), /caderno\.html/);
+  await guidedNotebook.close();
   await toolsPage.locator("#mode-free").click();
   await toolsPage.locator("#tab-data").click();
   await toolsPage.locator("#progress").fill("0");
@@ -403,9 +409,28 @@ try {
     );
   }
   await toolsPage.close();
+  const adminPage = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+  });
+  adminPage.on("pageerror", (e) => errors.push(e.message));
+  await adminPage.goto(
+    (process.env.TERMOLAB_URL || "http://127.0.0.1:5173") + "/admin.html",
+  );
+  await expect(adminPage.locator("#dashboard")).toBeHidden();
+  await expect(adminPage.locator("#admin-email")).toHaveValue(
+    "guisouza.sx3030@gmail.com",
+  );
+  await expect(adminPage.locator("#admin-password")).toHaveValue("");
+  await expect(adminPage.locator("#admin-login")).toBeVisible();
+  assert.ok(
+    await adminPage.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await adminPage.close();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export, 11 numerical challenges, uncertainty controls, phase shortcuts and advanced mobile layout; no browser errors.",
+    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, separate notebook route, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export, 11 numerical challenges, uncertainty controls, phase shortcuts and advanced mobile layout, unauthenticated admin gate and mobile admin layout; no browser errors.",
   );
 } finally {
   await browser.close();
