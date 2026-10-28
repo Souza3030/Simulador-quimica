@@ -1,12 +1,12 @@
 {
   "name": "termo-lab",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "vite --host 0.0.0.0",
     "build": "npm run check && vite build",
-    "test": "tsx --test physics.test.ts notebook-data.test.ts",
+    "test": "tsx --test physics.test.ts notebook-data.test.ts phet.test.ts",
     "check": "tsc --noEmit",
     "test:browser": "tsx tests/browser.ts"
   },
@@ -21,6 +21,7 @@
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "firebase": "^12.19.0"
+    "firebase": "^12.19.0",
+    "jspdf": "^3.0.4"
   }
 }

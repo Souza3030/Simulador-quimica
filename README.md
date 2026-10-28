@@ -1,4 +1,4 @@
-# TermoLab 4.0 · A descoberta está nas suas mãos
+# TermoLab 4.1 · A descoberta está nas suas mãos
 
 Um laboratório de investigação em **TypeScript estrito + Vite**, em português. Onze experiências conectam os assuntos do capítulo 14 de termoquímica: de sistemas e fronteiras à energia livre de Gibbs, com investigações de Lei de Hess e identificação calorimétrica de metais. A interface usa azul e laranja e a logo do Senac fornecida como referência.
 
@@ -21,6 +21,14 @@ Um laboratório de investigação em **TypeScript estrito + Vite**, em portuguê
 - **Onze hipóteses:** perguntas com feedback explicativo e progresso salvo.
 - Layout adaptado a celular, navegação por teclado, ajuda, descrição dos modelos e opção de reduzir movimento.
 
+## Novidades da versão 4.1
+
+- **Exportar PDF:** em `/caderno.html`, o botão gera um relatório com anotações Ver–Pensar–Perguntar, ensaios, condições, medições e progresso. O painel administrativo também permite exportar o PDF de um caderno selecionado. O arquivo usa a fonte livre DejaVu Sans, incluída localmente para preservar acentos e símbolos.
+- **Biblioteca PhET nos experimentos:** os 11 assuntos indicam uma simulação complementar entre cinco recursos oficiais do PhET: Formas e Transformações de Energia, Estados da Matéria: Básico, Propriedades dos Gases, Balanceamento de Equações Químicas e Reagentes, Produtos e Excesso. O seletor abre a simulação em uma janela dentro do TermoLab e oferece um link para a página oficial caso a incorporação não funcione. Essas simulações exigem internet e não substituem os cálculos do TermoLab.
+- **Questões mais claras:** o controle da bancada mostra **Ver experimento**; um atalho **Responder questões** leva às alternativas ampliadas. O feedback explica o acerto ou convida a tentar de novo, e **Fazer a questão de cálculo** abre a previsão numérica.
+
+As simulações externas são de [PhET Interactive Simulations, University of Colorado Boulder](https://phet.colorado.edu/pt_BR/). O TermoLab é independente: apresenta links e incorpora páginas oficiais do PhET, sem distribuir seu código.
+
 ## Investigação avançada
 
 A quarta aba de cada experiência traz uma comparação quantitativa que acompanha os controles da bancada:
@@ -41,7 +49,7 @@ Cada tema tem um **desafio numérico** gerado com os parâmetros atuais: aceita 
 
 ![Investigação da resolução do termômetro e identificação de metais](docs/investigacao.png)
 
-## Caderno e administração · versão 4.0
+## Caderno e administração
 
 - **Caderno em nova rota:** o botão abre `/caderno.html` com `target="_blank"`; a bancada permanece aberta. O caderno mostra anotações, ensaios, comparação e leituras. “Retomar” envia um ensaio à bancada aberta.
 - **Firestore:** a cópia local continua disponível sem conexão. Após login, o caderno sincroniza com o documento privado `notebooks/{uid}`. O projeto usa a configuração Firebase fornecida e regras de acesso por usuário.
@@ -87,7 +95,7 @@ npm ci
 npm start
 ```
 
-A versão nova mostra **TermoLab 4.0** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
+A versão nova mostra **TermoLab 4.1** no rodapé e **11 experiências** na navegação. Se o Git informar conflito ou arquivos locais modificados, preserve seu trabalho antes de continuar.
 
 Para gerar os arquivos do site:
 
@@ -100,7 +108,7 @@ O resultado fica em `dist/`. A simulação funciona sem login. Para sincronizar 
 ## Verificar
 
 ```sh
-npm test             # 27 testes científicos, instrumentos e casos de fronteira
+npm test             # 28 testes científicos, instrumentos e casos de fronteira
 npm run check        # TypeScript estrito
 npm run build        # checagem de tipos + compilação
 npm run test:browser # servidor na porta 5173 deve estar ativo
@@ -108,7 +116,7 @@ npm run test:browser # servidor na porta 5173 deve estar ativo
 
 O teste de interface usa Chromium em `/usr/bin/chromium`. Para outro sistema, configure `CHROMIUM_PATH` com o caminho de um Chromium/Chrome instalado. `TERMOLAB_URL` altera o endereço do servidor de teste.
 
-O teste de navegador cobre a abertura do caderno em outra aba, a preservação da bancada, comparação e restauração de ensaios, além dos onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV, onze desafios numéricos, resolução do termômetro, atalhos das fases e a nova aba em celular. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
+O teste de navegador cobre a exportação PDF, a biblioteca PhET simulada localmente, as questões ampliadas e a abertura do caderno em outra aba, a preservação da bancada, comparação e restauração de ensaios, além dos onze assuntos, 22 presets, onze gráficos, hipóteses, reprodução, controle do tempo, persistência, exportação JSON, condições de Gibbs e Carnot, controles condicionais, celular e diálogos. Também valida o termômetro por arraste e teclado, o pistão manipulável, os roteiros, cálculos, leituras persistidas e exportação CSV, onze desafios numéricos, resolução do termômetro, atalhos das fases e a nova aba em celular. As capturas de validação ficam em `/tmp/termolab-senac-desktop.png` e `/tmp/termolab-senac-mobile.png` no ambiente da nuvem.
 
 ## Organização
 
@@ -121,6 +129,8 @@ O teste de navegador cobre a abertura do caderno em outra aba, a preservação d
 - `app.ts`: reprodução, gráficos SVG e persistência da bancada.
 - `caderno.ts`, `admin.ts`: página independente do caderno e painel administrativo.
 - `notebook-data.ts`, `firebase.ts`: migração local, autenticação e dados no Firestore.
+- `pdf.ts`: relatório PDF do caderno; `public/DejaVuSans.ttf` e `docs/DEJAVU-LICENSE.txt`: fonte e licença.
+- `phet.ts`: biblioteca curada, relações com os temas e links oficiais.
 - `firestore.rules`, `firebase.json`: regras de segurança e rotas de hospedagem.
 - `icons.ts`, `style.css`, `index.html`: identidade visual e interface.
 - `physics.test.ts`, `tests/browser.ts`: validação científica e funcional.

@@ -23,9 +23,13 @@ try {
     path: "/tmp/termolab-senac-desktop.png",
     fullPage: true,
   });
+  await expect(page.locator("#play")).toContainText("Ver experimento");
+  await expect(page.locator("#open-phet")).toBeVisible();
+  await page.locator("#jump-question").click();
+  await expect(page.locator("#answers button").first()).toBeFocused();
   // Playback, pause and deterministic scrubbing.
   await page
-    .getByRole("button", { name: "Iniciar experimento", exact: true })
+    .getByRole("button", { name: "Ver experimento", exact: true })
     .click();
   await expect(page.locator("#progress")).not.toHaveValue("0");
   await page
@@ -63,6 +67,25 @@ try {
     .locator("#note-think")
     .fill("O copo também absorve calor.");
   await notebookPage.locator("#note-ask").fill("E se eu dobrar a massa fria?");
+  const pdfPromise = notebookPage.waitForEvent("download");
+  await notebookPage.locator("#export-pdf").click();
+  const pdf = await pdfPromise;
+  assert.match(pdf.suggestedFilename(), /\.pdf$/);
+  const pdfPath = await pdf.path();
+  assert.ok(pdfPath);
+  const pdfBytes = await readFile(pdfPath);
+  assert.equal(pdfBytes.subarray(0, 5).toString(), "%PDF-");
+  const { execFileSync } = await import("node:child_process");
+  try {
+    const pdfText = execFileSync("pdftotext", [pdfPath, "-"], {
+      encoding: "utf8",
+    });
+    assert.match(pdfText, /Caderno de cientista/);
+    assert.match(pdfText, /A amostra quente cede energia/);
+    assert.match(pdfText, /Calorimetria/);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
   const downloadPromise = notebookPage.waitForEvent("download");
   await notebookPage.locator("#export").click();
   const download = await downloadPromise;
@@ -81,6 +104,35 @@ try {
   await expect(notebookPage.locator(".saved-run")).toHaveCount(2);
   await notebookPage.close();
   await page.reload();
+  await page.route("https://phet.colorado.edu/**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<!doctype html><title>PhET test</title>",
+    }),
+  );
+  await page.locator("#open-phet").click();
+  await expect(page.locator("#phet-dialog")).toBeVisible();
+  await expect(page.locator("#phet-frame")).toHaveAttribute(
+    "src",
+    /energy-forms-and-changes_pt_BR\.html$/,
+  );
+  await page.locator("#phet-sim-picker").selectOption("gas-properties");
+  await expect(page.locator("#phet-frame")).toHaveAttribute(
+    "src",
+    /gas-properties_pt_BR\.html$/,
+  );
+  await expect(page.locator("#phet-page")).toHaveAttribute(
+    "href",
+    "https://phet.colorado.edu/pt_BR/simulations/gas-properties",
+  );
+  await page.getByRole("button", { name: "Fechar simulação PhET" }).click();
+  await expect(page.locator("#phet-frame")).not.toHaveAttribute("src", /phet/);
+  await page.locator('[data-mode="phase"]').click();
+  await expect(page.locator("#phet-card-title")).toHaveText(
+    "Estados da Matéria: Básico",
+  );
+  await page.locator('[data-mode="mix"]').click();
   // Every chapter topic, every preset, every graph, every question.
   for (const e of experiments) {
     await page.locator(`[data-mode="${e.id}"]`).click();
@@ -103,9 +155,15 @@ try {
       .getByRole("button", { name: "Fechar explicação", exact: true })
       .click();
     await page.locator(`[data-answer="${(e.correct + 1) % 3}"]`).click();
-    await expect(page.locator("#feedback")).toContainText("outra hipótese");
+    await expect(page.locator("#feedback")).toContainText("outra alternativa");
     await page.locator(`[data-answer="${e.correct}"]`).click();
-    await expect(page.locator("#feedback")).toHaveText(e.explanation);
+    await expect(page.locator("#feedback")).toContainText(e.explanation);
+    await page.locator("#next-numeric").click();
+    await expect(page.locator("#tab-advanced")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await expect(page.locator("#numeric-answer")).toBeFocused();
   }
   await expect(page.locator("#challenge-progress")).toHaveText(
     "11/11 descobertas",
@@ -128,6 +186,14 @@ try {
   // Mobile has no page overflow; all topics remain reachable.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('[data-mode="mix"]').click();
+  await page.locator("#open-phet").click();
+  await expect(page.locator("#phet-dialog")).toBeVisible();
+  assert.ok(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  );
+  await page.getByRole("button", { name: "Fechar simulação PhET" }).click();
   assert.ok(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -428,9 +494,61 @@ try {
     ),
   );
   await adminPage.close();
+  const reportPage = await browser.newPage();
+  reportPage.on("pageerror", (e) => errors.push(e.message));
+  const base = process.env.TERMOLAB_URL || "http://127.0.0.1:5173";
+  await reportPage.goto(base + "/caderno.html");
+  const defaults = experiments.find((e) => e.id === "mix")!.defaults;
+  const reportRecord = (index: number) => ({
+    id: `report-${index}`,
+    mode: "mix",
+    params: defaults,
+    progress: index / 100,
+    date: "2026-10-28T12:00:00.000Z",
+  });
+  const reportData = {
+    notes: {
+      see: "Água e calor ".repeat(210),
+      think: "Balanço de energia",
+      ask: "Por que muda?",
+    },
+    snapshots: Array.from({ length: 12 }, (_, i) => reportRecord(i)),
+    measurements: Array.from({ length: 60 }, (_, i) => reportRecord(i)),
+    solved: [],
+    numericSolved: [],
+    visited: ["mix"],
+    selected: "mix",
+    updatedAt: 0,
+  };
+  await reportPage.evaluate(
+    (json) => localStorage.setItem("termolab-investigacoes-v2", json),
+    JSON.stringify(reportData),
+  );
+  await reportPage.reload();
+  await expect(reportPage.locator("#saved-runs .saved-run")).toHaveCount(12);
+  const largePdfPromise = reportPage.waitForEvent("download");
+  await reportPage.locator("#export-pdf").click();
+  const largePdf = await largePdfPromise;
+  const largePdfPath = await largePdf.path();
+  assert.ok(largePdfPath);
+  const largePdfBytes = await readFile(largePdfPath);
+  assert.equal(largePdfBytes.subarray(0, 5).toString(), "%PDF-");
+  try {
+    const { execFileSync } = await import("node:child_process");
+    const text = execFileSync("pdftotext", [largePdfPath, "-"], {
+      encoding: "utf8",
+    });
+    assert.match(text, /60\. Calorimetria/);
+    assert.match(text, /Progresso/);
+    const info = execFileSync("pdfinfo", [largePdfPath], { encoding: "utf8" });
+    assert.ok(Number(info.match(/Pages:\s+(\d+)/)?.[1]) >= 2);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  await reportPage.close();
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, separate notebook route, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export, 11 numerical challenges, uncertainty controls, phase shortcuts and advanced mobile layout, unauthenticated admin gate and mobile admin layout; no browser errors.",
+    "PASS: 11 topics, 22 presets, 11 graphs, 11 challenges, playback, scrubbing, conservation display, snapshots, separate notebook route, comparison, restore, persistence, JSON export, Gibbs equilibrium, Carnot limit, conditional controls, mobile, dialogs, reduced motion, Senac asset, thermometer drag/keyboard, piston drag/keyboard, guided steps, live calculations, measurements persistence and CSV export, PDF reports up to 60 readings, PhET library, clearer questions, 11 numerical challenges, uncertainty controls, phase shortcuts and advanced mobile layout, unauthenticated admin gate and mobile admin layout; no browser errors.",
   );
 } finally {
   await browser.close();

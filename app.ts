@@ -17,6 +17,12 @@ import {
 import { lessons, calculations } from "./lessons.ts";
 import { sampleTargets, readProbe } from "./instruments.ts";
 import { clamp, R } from "./physics.ts";
+import {
+  phetSimulations,
+  recommendedPhet,
+  phetPage,
+  phetEmbed,
+} from "./phet.ts";
 function $<T extends Element = HTMLElement>(selector: string): T {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Elemento ausente: ${selector}`);
@@ -230,12 +236,12 @@ function challenge() {
   $("#challenge-progress").textContent =
     `${new Set(notebook.solved).size}/${experiments.length} descobertas`;
   $("#feedback").textContent = notebook.solved.includes(mode)
-    ? e.explanation
-    : "";
+    ? `Resposta correta. ${e.explanation}`
+    : "Escolha uma alternativa. Você pode tentar novamente se errar.";
   $("#answers").innerHTML = e.choices
     .map(
       (choice, i) =>
-        `<button data-answer="${i}" class="${notebook.solved.includes(mode) && i === e.correct ? "correct" : ""}"><b>${String.fromCharCode(65 + i)}</b>${choice}</button>`,
+        `<button type="button" data-answer="${i}" class="${notebook.solved.includes(mode) && i === e.correct ? "correct" : ""}" ${notebook.solved.includes(mode) && i === e.correct ? 'aria-current="true"' : ""}><b>${String.fromCharCode(65 + i)}</b><span>${escape(choice)}</span></button>`,
     )
     .join("");
   document.querySelectorAll<HTMLButtonElement>("[data-answer]").forEach(
@@ -246,14 +252,60 @@ function challenge() {
           if (!notebook.solved.includes(mode)) notebook.solved.push(mode);
           persist();
           challenge();
+          $<HTMLButtonElement>("#next-numeric").focus();
         } else {
           b.classList.add("incorrect");
           $("#feedback").textContent =
-            "Vale testar outra hipótese. Observe o modelo e tente novamente.";
+            "Ainda não. Repare nas grandezas da bancada e tente outra alternativa.";
         }
       }),
   );
 }
+function renderPhetRecommendation() {
+  const recommended = recommendedPhet(mode);
+  $("#phet-card-title").textContent = recommended.simulation.name;
+  $("#phet-connection").textContent = recommended.connection;
+}
+const phetPicker = $<HTMLSelectElement>("#phet-sim-picker");
+phetPicker.innerHTML = phetSimulations
+  .map(
+    (simulation) =>
+      `<option value="${simulation.slug}">${escape(simulation.name)}</option>`,
+  )
+  .join("");
+function showPhetSimulation(slug: string) {
+  const simulation = phetSimulations.find((item) => item.slug === slug);
+  if (!simulation) return;
+  phetPicker.value = simulation.slug;
+  $("#phet-dialog-title").textContent = simulation.name;
+  $("#phet-focus").textContent = simulation.focus;
+  $("#phet-limitation").textContent = simulation.limitation;
+  $<HTMLAnchorElement>("#phet-page").href = phetPage(simulation.slug);
+  $<HTMLIFrameElement>("#phet-frame").src = phetEmbed(simulation.slug);
+}
+$("#open-phet").addEventListener("click", () => {
+  showPhetSimulation(recommendedPhet(mode).simulation.slug);
+  $<HTMLDialogElement>("#phet-dialog").showModal();
+});
+phetPicker.onchange = () => showPhetSimulation(phetPicker.value);
+$("#phet-dialog").addEventListener("close", () => {
+  $<HTMLIFrameElement>("#phet-frame").removeAttribute("src");
+});
+$("#jump-question").addEventListener("click", () => {
+  $("#question-card").scrollIntoView({
+    behavior: reduced ? "instant" : "smooth",
+    block: "center",
+  });
+  $<HTMLButtonElement>("#answers button").focus();
+});
+$("#next-numeric").addEventListener("click", () => {
+  setLearningTab("advanced");
+  $("#numeric-form").scrollIntoView({
+    behavior: reduced ? "instant" : "smooth",
+    block: "center",
+  });
+  $<HTMLInputElement>("#numeric-answer").focus();
+});
 function selectExperiment(id: Mode, snapshot?: Snapshot) {
   mode = id;
   params = { ...(snapshot?.params ?? getExperiment(id).defaults) };
@@ -268,6 +320,7 @@ function selectExperiment(id: Mode, snapshot?: Snapshot) {
     `EXPERIÊNCIA ${e.number} / ${e.name.toUpperCase()}`;
   $("#experiment-title").textContent = e.title;
   $("#experiment-subtitle").textContent = e.subtitle;
+  renderPhetRecommendation();
   $("#control-icon").innerHTML = icon(e.icon);
   $("#formula").textContent = e.formula;
   $("#timeline").hidden = id === "gibbs";
@@ -294,15 +347,16 @@ function render() {
         `<div class="metric ${m.color ?? ""}"><span>${m.label}</span><strong>${fmt(m.value, 1)}<small>${m.unit}</small></strong></div>`,
     )
     .join("");
-  $("#play").innerHTML = icon(running ? "pause" : "play");
-  $("#play").setAttribute(
-    "aria-label",
-    running
-      ? "Pausar experimento"
-      : progress >= 1
-        ? "Repetir experimento"
-        : "Iniciar experimento",
-  );
+  const playLabel = running
+    ? "Pausar experimento"
+    : progress >= 1
+      ? "Rever experimento"
+      : progress > 0
+        ? "Continuar experimento"
+        : "Ver experimento";
+  $("#play").innerHTML =
+    `${icon(running ? "pause" : "play")}<span>${playLabel}</span>`;
+  $("#play").setAttribute("aria-label", playLabel);
   $<HTMLInputElement>("#progress").value = String(Math.round(progress * 1000));
   $("#progress-label").textContent = `${fmt(progress * 100, 0)}%`;
   $("#time-label").textContent =

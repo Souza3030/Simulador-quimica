@@ -183,6 +183,23 @@ $("#sign-out").addEventListener("click", async () => {
   await logout();
   status("Conta desconectada. O caderno local continua disponível.");
 });
+$("#export-pdf").addEventListener("click", async () => {
+  const button = $<HTMLButtonElement>("#export-pdf");
+  button.disabled = true;
+  button.textContent = "Preparando PDF…";
+  try {
+    const { downloadNotebookPdf } = await import("./pdf.ts");
+    await downloadNotebookPdf(book, auth.currentUser?.email || "Meu caderno");
+    status("PDF do caderno gerado.");
+  } catch (error) {
+    status(
+      `Não foi possível gerar o PDF: ${error instanceof Error ? error.message : "tente novamente"}`,
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Exportar PDF";
+  }
+});
 $("#export").addEventListener("click", () => {
   const url = URL.createObjectURL(
     new Blob([exportNotebook(book)], {

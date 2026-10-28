@@ -82,7 +82,11 @@
               <h2 id="experiment-title"></h2>
               <p id="experiment-subtitle"></p>
             </div>
-            <button id="model" class="model-link"></button>
+            <div class="experiment-heading-actions">
+              <button id="jump-question" class="question-shortcut">
+                Responder questões</button
+              ><button id="model" class="model-link"></button>
+            </div>
           </div>
           <div class="experience-mode">
             <div
@@ -250,6 +254,16 @@
               </p>
             </aside>
           </section>
+          <section class="phet-card" aria-labelledby="phet-card-title">
+            <div>
+              <span class="eyebrow"
+                >BIBLIOTECA PHET · SIMULAÇÃO COMPLEMENTAR</span
+              >
+              <h3 id="phet-card-title"></h3>
+              <p id="phet-connection"></p>
+            </div>
+            <button id="open-phet" type="button">Explorar no PhET</button>
+          </section>
           <section class="learning-panel" aria-label="Detalhes do experimento">
             <div
               class="learning-tabs"
@@ -354,7 +368,7 @@
               ></div>
               <article class="numeric-card">
                 <div class="challenge-top">
-                  <span class="eyebrow">PREVEJA COM NÚMEROS</span
+                  <span class="eyebrow">QUESTÃO 2 DE 2 · CÁLCULO</span
                   ><span id="numeric-progress"></span>
                 </div>
                 <h3 id="numeric-question"></h3>
@@ -395,14 +409,21 @@
               <p id="insight"></p>
               <div id="formula" class="formula"></div>
             </article>
-            <article class="challenge-card">
+            <article
+              class="challenge-card"
+              id="question-card"
+              aria-labelledby="question"
+            >
               <div class="challenge-top">
-                <span class="eyebrow">PAUSA PARA UMA HIPÓTESE</span
+                <span class="eyebrow">QUESTÃO 1 DE 2 · CONCEITO</span
                 ><span id="challenge-progress"></span>
               </div>
               <h3 id="question"></h3>
               <div id="answers"></div>
               <p id="feedback" role="status"></p>
+              <button id="next-numeric" class="next-question" type="button">
+                Fazer a questão de cálculo →
+              </button>
             </article>
           </section>
           <section class="notebook-teaser">
@@ -424,11 +445,60 @@
           </section>
           <footer>
             <span>Feito para quem pergunta <b>por quê.</b></span
-            ><span>TermoLab 4.0 · Projeto educacional · Ensino médio</span>
+            ><span>TermoLab 4.1 · Projeto educacional · Ensino médio</span>
           </footer>
         </main>
       </div>
     </div>
+    <dialog
+      id="phet-dialog"
+      class="phet-dialog"
+      aria-labelledby="phet-dialog-title"
+    >
+      <div class="dialog-header">
+        <div>
+          <span class="eyebrow">PHET INTERACTIVE SIMULATIONS</span>
+          <h2 id="phet-dialog-title">Explore uma simulação</h2>
+        </div>
+        <button
+          data-close="phet-dialog"
+          class="icon-button"
+          aria-label="Fechar simulação PhET"
+        >
+          ×
+        </button>
+      </div>
+      <div class="phet-dialog-body">
+        <label for="phet-sim-picker">Escolha uma simulação</label>
+        <div class="phet-picker-row">
+          <select id="phet-sim-picker"></select>
+          <a
+            id="phet-page"
+            class="phet-external"
+            href="https://phet.colorado.edu/pt_BR/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Abrir no site oficial</a
+          >
+        </div>
+        <p id="phet-focus"></p>
+        <p id="phet-limitation"></p>
+        <div class="phet-frame">
+          <iframe
+            id="phet-frame"
+            title="Simulação PhET"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+        </div>
+        <p class="phet-credit">
+          Simulações oficiais de PhET Interactive Simulations, University of
+          Colorado Boulder. Requer conexão com a internet. Se o navegador
+          impedir a incorporação, use “Abrir no site oficial” acima.
+        </p>
+      </div>
+    </dialog>
     <dialog id="guide">
       <div class="dialog-header">
         <h2 id="guide-title"></h2>

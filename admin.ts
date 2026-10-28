@@ -76,8 +76,25 @@ function detail(row: Row) {
           `<li>${esc(getExperiment(s.mode).name)} · ${Math.round(s.progress * 100)}% · ${esc(s.date)}</li>`,
       )
       .join("") || "<li>Sem ensaios.</li>"
-  }</ul><button id="admin-export-user" class="secondary-action">Exportar caderno JSON</button>`;
+  }</ul><div class="route-actions"><button id="admin-export-pdf" class="primary-action">Exportar PDF</button><button id="admin-export-user" class="secondary-action">Exportar JSON</button></div>`;
   $("#admin-export-user").addEventListener("click", () => download(row));
+  $("#admin-export-pdf").addEventListener("click", async () => {
+    const button = $<HTMLButtonElement>("#admin-export-pdf");
+    button.disabled = true;
+    button.textContent = "Preparando PDF…";
+    try {
+      const { downloadNotebookPdf } = await import("./pdf.ts");
+      await downloadNotebookPdf(row.data, row.email || row.uid);
+      status("PDF do caderno gerado.");
+    } catch (error) {
+      status(
+        `Não foi possível gerar o PDF: ${error instanceof Error ? error.message : "tente novamente"}`,
+      );
+    } finally {
+      button.disabled = false;
+      button.textContent = "Exportar PDF";
+    }
+  });
   panel.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 function render() {

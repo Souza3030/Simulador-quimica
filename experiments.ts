@@ -201,11 +201,16 @@ export const experiments: Experiment[] = [
     formula: "Qquente + Qfria + Qcopo = 0",
     model:
       "Conjunto isolado, sem mudança de fase. Calorímetro inicialmente à temperatura fria. A evolução representa uma troca ideal ilustrativa; o equilíbrio e a conservação da energia são calculados. As câmaras representam parcelas da mistura.",
-    question: "Com massas iguais a 80 °C e 20 °C e copo ideal, o equilíbrio é…",
-    choices: ["50 °C.", "60 °C.", "100 °C."],
+    question:
+      "Se duas porções iguais de água forem misturadas em um copo ideal, onde ficará a temperatura final?",
+    choices: [
+      "No meio entre as temperaturas iniciais.",
+      "Sempre na temperatura da água quente.",
+      "Acima da temperatura da água quente.",
+    ],
     correct: 0,
     explanation:
-      "Com a mesma substância, massas iguais e copo sem capacidade térmica, o equilíbrio é a média: (80 + 20)/2 = 50 °C.",
+      "Com a mesma substância, massas iguais e copo sem capacidade térmica, o equilíbrio é a média das temperaturas iniciais. Por exemplo, 80 °C e 20 °C resultam em 50 °C.",
     duration: 12,
   },
   {
@@ -266,11 +271,12 @@ export const experiments: Experiment[] = [
     formula: "ΔU = Q + W",
     model:
       "Sistema fechado. Q>0: calor entra. W>0: trabalho é realizado sobre o sistema; W<0: o sistema realiza trabalho. O balanço não define temperatura ou volume sem uma equação de estado.",
-    question: "O sistema recebe 40 kJ e realiza 15 kJ de trabalho. ΔU vale…",
-    choices: ["55 kJ.", "−25 kJ.", "25 kJ."],
+    question:
+      "Se o sistema realiza trabalho sobre o ambiente, qual é o sinal de W neste laboratório?",
+    choices: ["Positivo.", "Zero.", "Negativo."],
     correct: 2,
     explanation:
-      "O trabalho realizado pelo sistema é W = −15 kJ. Assim, ΔU = 40 − 15 = 25 kJ.",
+      "W representa trabalho sobre o sistema. Se o sistema realiza trabalho, W é negativo. Por exemplo, com Q = 40 kJ e W = −15 kJ, ΔU = 25 kJ.",
     duration: 8,
   },
   {
@@ -296,15 +302,15 @@ export const experiments: Experiment[] = [
     model:
       "Máquina cíclica entre reservatórios de temperatura constante em kelvin. Wsaída=Qquente−Qfria. ΔSmáquina=0 por ciclo; ΔSuniverso=Qfria/Tfria−Qquente/Tquente ≥ 0. Sem perdas adicionais além da irreversibilidade ajustada.",
     question:
-      "Uma máquina entre 600 K e 300 K pode converter 100% do calor em trabalho?",
+      "Uma máquina térmica que opera em ciclos pode transformar todo o calor recebido em trabalho?",
     choices: [
-      "Não: o limite é 50%.",
-      "Sim, se receber mais calor.",
-      "Sim, com um ciclo mais rápido.",
+      "Não. Parte do calor precisa ir para a fonte fria.",
+      "Sim, se receber mais calor por ciclo.",
+      "Sim, se o ciclo acontecer mais rápido.",
     ],
     correct: 0,
     explanation:
-      "O limite de Carnot é 1 − 300/600 = 0,5. Uma parte do calor necessariamente vai para a fonte fria.",
+      "Uma máquina cíclica rejeita parte do calor à fonte fria. Para fontes a 600 K e 300 K, o rendimento máximo de Carnot é 1 − 300/600 = 50%.",
     duration: 8,
   },
   {
